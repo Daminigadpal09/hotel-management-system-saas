@@ -1,0 +1,11 @@
+
+const mongoose= require("mongoose");
+const  HotelScheme=new mongoose.Schema({
+    name:{type:String,required:true},
+    status:{
+        type:String,
+        enum:["active","suspended"],
+        default:"active"
+    }
+},{timestamps:true});
+module.exports=mongoose.model("Hotel",HotelScheme);
