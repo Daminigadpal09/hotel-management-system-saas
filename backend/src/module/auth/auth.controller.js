@@ -5,7 +5,7 @@
 
 
 
-const bcrypt=require("bcrypt.js");
+const bcrypt=require("bcryptjs");
 const jwt=require("jsonwebtoken");
 const Hotel=require("../../model/hotel");
 const User= require("../../model/User");
