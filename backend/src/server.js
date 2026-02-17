@@ -1,80 +1,35 @@
-// require("dotenv").config();
-// const express = require("express");
-// const cors = require("cors");
-// const connectDB = require("./config/db");
+// src/server.js
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import mongoose from "mongoose";
 
-// const authRoutes = require("./modules/auth/auth.routes");
+import authRoutes from "./routes/authRoutes.js";
+import hotelRoutes from "./routes/hotelRouets.js";
+import branchRoutes from "./routes/branchRoutes.js";
+import roomRoutes from "./routes/roomRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 
-// const app = express();
-
-// connectDB();
-
-// app.use(cors());
-// app.use(express.json());
-
-// app.use("/api/auth", authRoutes);
-
-// app.get("/", (req, res) => {
-//   res.send("Hotel SaaS Backend Running 🚀");
-// });
-
-// const PORT = process.env.PORT || 5000;
-
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
-
-require("dotenv").config();
-const express=require("express");
-const cors=require("cors");
-const connectDB=require("./config/db");
-
-console.log("Loading auth routes...");
-const authRoutes = require("./module/auth/auth.routes");
-console.log("Auth routes loaded");
+dotenv.config();
 
 const app = express();
-
-connectDB();
 
 app.use(cors());
 app.use(express.json());
 
-console.log("Registering auth routes...");
+// ROUTES
 app.use("/api/auth", authRoutes);
-console.log("Auth routes registered at /api/auth");
+app.use("/api/hotels", hotelRoutes);
+app.use("/api/branches", branchRoutes);
+app.use("/api/rooms", roomRoutes);
+app.use("/api/bookings", bookingRoutes);
 
-// Add a simple test route
-app.post("/test", (req, res) => {
-    console.log("Test route hit");
-    res.json({ message: "Test route working" });
-});
-
-app.get("/", (req, res) => {
-  res.send("Hotel SaaS Backend Running 🚀");
-});
-
-// Add a catch-all route to debug
-app.use((req, res, next) => {
-    console.log(`Request received: ${req.method} ${req.url}`);
-    console.log('Headers:', req.headers);
-    console.log('Body:', req.body);
-    res.status(404).json({ 
-        message: 'Route not found',
-        method: req.method,
-        url: req.url,
-        availableRoutes: [
-            'GET /',
-            'POST /test',
-            'POST /api/auth/register-hotel',
-            'POST /api/auth/register', 
-            'POST /api/auth/login'
-        ]
-    });
-});
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// DB CONNECT
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB Connected");
+    app.listen(process.env.PORT || 5000, () =>
+      console.log("Server running")
+    );
+  })
+  .catch(err => console.log(err));
