@@ -6,11 +6,44 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Implement login logic
-    console.log("Login:", { email, password });
-    navigate("/dashboard");
+    console.log("Login attempt:", { email, password });
+    
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("Response data:", data);
+      
+      if (response.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        console.log("Login successful, redirecting...");
+        
+        // Redirect based on role
+        if (data.user.role === "super_admin") {
+          navigate("/super-admin");
+        } else if (data.user.role === "owner") {
+          navigate("/owner-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
+      } else {
+        console.error("Login failed:", data.message);
+        alert(data.message || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Error: " + error.message);
+    }
   };
 
   return (
