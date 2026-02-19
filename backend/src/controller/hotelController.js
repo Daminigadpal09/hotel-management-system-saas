@@ -28,6 +28,18 @@ export const createHotel = async (req, res) => {
 // 🏨 Get Hotels (for hotel owners - only their hotels)
 export const getHotels = async (req, res) => {
   try {
+    // First, let's see all hotels in the database for debugging
+    const allHotels = await Hotel.find({});
+    console.log("DEBUG: All hotels in database:", {
+      totalHotels: allHotels.length,
+      hotels: allHotels.map(h => ({ 
+        id: h._id, 
+        name: h.name, 
+        owner_id: h.owner_id,
+        status: h.status 
+      }))
+    });
+
     const hotels = await Hotel.find({ owner_id: req.user.id })
       .sort({ createdAt: -1 });
 

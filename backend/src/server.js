@@ -9,6 +9,7 @@ import hotelRoutes from "./routes/hotelRoutes.js";
 import superAdminRoutes from "./routes/superAdminRoutes.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import maintenanceRoutes from "./routes/maintenanceRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use("/api/hotels", hotelRoutes);
 app.use("/api/super-admin", superAdminRoutes);
 app.use("/api", roomRoutes);
 app.use("/api", maintenanceRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 // 404 Handler - using middleware
 app.use((req, res) => {

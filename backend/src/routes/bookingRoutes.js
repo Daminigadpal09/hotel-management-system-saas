@@ -5,21 +5,21 @@ import {
   getBookings
 } from "../controller/bookingController.js";
 
-import { verifyToken, authorizeRoles } from "../middleware/auth.middleware.js";
+import { protect, authorize } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 router.post(
   "/",
-  verifyToken,
-  authorizeRoles("OWNER", "BRANCH_MANAGER", "RECEPTIONIST"),
+  protect,
+  authorize("owner", "branch_manager", "receptionist"),
   createBooking
 );
 
 router.get(
   "/",
-  verifyToken,
-  authorizeRoles("OWNER", "BRANCH_MANAGER", "RECEPTIONIST"),
+  protect,
+  authorize("owner", "branch_manager", "receptionist"),
   getBookings
 );
 

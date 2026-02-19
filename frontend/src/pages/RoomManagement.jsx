@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { roomAPI } from "../services/api.js";
+import { roomAPI, branchAPI } from "../services/api.js";
 
 export default function RoomManagement() {
   const { hotelId, branchId } = useParams();
@@ -9,6 +9,10 @@ export default function RoomManagement() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ category: "", status: "", floor: "" });
   const navigate = useNavigate();
+
+  // Handle both route patterns: /rooms/:hotelId/:branchId and /hotel-rooms/:hotelId
+  const actualBranchId = branchId || null; // branchId will be undefined for /hotel-rooms route
+  const isHotelWideView = !branchId; // true for /hotel-rooms route
 
   const [roomForm, setRoomForm] = useState({
     roomNumber: "",
@@ -26,11 +30,32 @@ export default function RoomManagement() {
 
   useEffect(() => {
     fetchRooms();
-  }, [hotelId, branchId, filter]);
+  }, [hotelId, actualBranchId, isHotelWideView, filter]);
 
   const fetchRooms = async () => {
     try {
-      const data = await roomAPI.getRooms(hotelId, branchId, filter);
+      let data;
+      
+      if (isHotelWideView) {
+        // Hotel-wide view: fetch all branches first, then all rooms
+        const branchesData = await branchAPI.getBranches(hotelId);
+        let allRooms = [];
+        
+        for (const branch of branchesData.data) {
+          try {
+            const roomsData = await roomAPI.getRooms(hotelId, branch._id);
+            allRooms = [...allRooms, ...roomsData.data];
+          } catch (error) {
+            console.error(`Error fetching rooms for branch ${branch._id}:`, error);
+          }
+        }
+        
+        data = { data: allRooms };
+      } else {
+        // Branch-specific view: fetch rooms for specific branch
+        data = await roomAPI.getRooms(hotelId, actualBranchId, filter);
+      }
+      
       setRooms(data.data);
     } catch (error) {
       console.error("Error fetching rooms:", error);

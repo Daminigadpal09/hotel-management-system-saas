@@ -12,15 +12,39 @@ export const getPlatformAnalytics = async (req, res) => {
     
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ status: "active" });
+    const inactiveUsers = await User.countDocuments({ status: "inactive" });
+    
+    // Get users by role
+    const usersByRole = await User.aggregate([
+      { $group: { _id: "$role", count: { $sum: 1 } } }
+    ]);
     
     const totalBranches = await Branch.countDocuments();
     
-    // Revenue calculation (simplified)
+    // Revenue calculation (includes all active subscriptions)
+    const freeHotels = await Hotel.countDocuments({ subscription_plan: "free", subscription_status: "active" });
     const basicHotels = await Hotel.countDocuments({ subscription_plan: "basic", subscription_status: "active" });
     const premiumHotels = await Hotel.countDocuments({ subscription_plan: "premium", subscription_status: "active" });
     const enterpriseHotels = await Hotel.countDocuments({ subscription_plan: "enterprise", subscription_status: "active" });
     
-    const monthlyRevenue = (basicHotels * 29) + (premiumHotels * 99) + (enterpriseHotels * 299);
+    const monthlyRevenue = (freeHotels * 0) + (basicHotels * 29) + (premiumHotels * 99) + (enterpriseHotels * 299);
+
+    // Get all hotels for detailed list
+    const allHotels = await Hotel.find()
+      .populate("owner_id", "name email phone")
+      .sort({ createdAt: -1 });
+
+    // Get all users for detailed list
+    const allUsers = await User.find()
+      .populate("hotel_id", "name")
+      .populate("branch_id", "name")
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    // Get all branches
+    const allBranches = await Branch.find()
+      .populate("hotel_id", "name")
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
@@ -29,18 +53,24 @@ export const getPlatformAnalytics = async (req, res) => {
           total: totalHotels,
           active: activeHotels,
           pending: pendingHotels,
-          suspended: suspendedHotels
+          suspended: suspendedHotels,
+          list: allHotels
         },
         users: {
           total: totalUsers,
-          active: activeUsers
+          active: activeUsers,
+          inactive: inactiveUsers,
+          byRole: usersByRole,
+          list: allUsers
         },
         branches: {
-          total: totalBranches
+          total: totalBranches,
+          list: allBranches
         },
         revenue: {
           monthly: monthlyRevenue,
           subscriptions: {
+            free: freeHotels,
             basic: basicHotels,
             premium: premiumHotels,
             enterprise: enterpriseHotels
@@ -49,6 +79,7 @@ export const getPlatformAnalytics = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error("Error in getPlatformAnalytics:", error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -61,7 +92,6 @@ export const getAllHotels = async (req, res) => {
   try {
     const hotels = await Hotel.find()
       .populate("owner_id", "name email phone")
-      .populate("approved_by", "name")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -69,6 +99,7 @@ export const getAllHotels = async (req, res) => {
       data: hotels
     });
   } catch (error) {
+    console.error("Error in getAllHotels:", error);
     res.status(500).json({
       success: false,
       message: error.message

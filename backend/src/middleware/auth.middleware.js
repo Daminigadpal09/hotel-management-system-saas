@@ -88,7 +88,11 @@ export const authorize = (...roles) => {
     if (!roles.includes(req.user.role)) {
       console.log("DEBUG: Role check failed:", {
         userRole: req.user.role,
-        requiredRoles: roles
+        userRoleType: typeof req.user.role,
+        requiredRoles: roles,
+        requiredRolesType: typeof roles,
+        rolesArray: Array.isArray(roles),
+        includesResult: roles.includes(req.user.role)
       });
       return res.status(403).json({
         success: false,
@@ -98,6 +102,12 @@ export const authorize = (...roles) => {
 
     // Additional branch-level access control
     if (req.user.role === "branch_manager" && req.params.branchId) {
+      console.log("DEBUG: Branch manager access check:", {
+        userRole: req.user.role,
+        userBranchId: req.user.branch_id,
+        paramBranchId: req.params.branchId,
+        accessAllowed: !req.user.branch_id || req.user.branch_id.toString() === req.params.branchId
+      });
       if (req.user.branch_id && req.user.branch_id.toString() !== req.params.branchId) {
         return res.status(403).json({
           success: false,
@@ -108,6 +118,12 @@ export const authorize = (...roles) => {
 
     // Additional staff-level access control
     if (["receptionist", "housekeeping", "accountant"].includes(req.user.role) && req.params.branchId) {
+      console.log("DEBUG: Staff access check:", {
+        userRole: req.user.role,
+        userBranchId: req.user.branch_id,
+        paramBranchId: req.params.branchId,
+        accessAllowed: !req.user.branch_id || req.user.branch_id.toString() === req.params.branchId
+      });
       if (req.user.branch_id && req.user.branch_id.toString() !== req.params.branchId) {
         return res.status(403).json({
           success: false,

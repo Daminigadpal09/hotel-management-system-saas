@@ -8,6 +8,8 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import HotelOwnerDashboard from "./pages/HotelOwnerDashboard";
 import BranchManagement from "./pages/BranchManagement";
 import RoomManagement from "./pages/RoomManagement";
+import BookingManagement from "./pages/BookingManagement";
+import ViewHotel from "./pages/ViewHotel";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -55,6 +57,30 @@ function App() {
           element={
             <ProtectedRoute>
               <RoomManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel-rooms/:hotelId"
+          element={
+            <ProtectedRoute>
+              <RoomManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bookings"
+          element={
+            <ProtectedRoute>
+              <BookingManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/view-hotel/:hotelId"
+          element={
+            <ProtectedRoute>
+              <ViewHotel />
             </ProtectedRoute>
           }
         />

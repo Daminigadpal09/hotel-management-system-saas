@@ -202,3 +202,26 @@ export const maintenanceAPI = {
       body: JSON.stringify(resolutionData)
     })
 };
+
+// Booking API calls
+export const bookingAPI = {
+  getBookings: () => apiRequest('/bookings'),
+  
+  createBooking: (bookingData) => apiRequest('/bookings', {
+    method: "POST",
+    body: JSON.stringify(bookingData)
+  }),
+  
+  updateBooking: (bookingId, bookingData) => apiRequest(`/bookings/${bookingId}`, {
+    method: "PUT",
+    body: JSON.stringify(bookingData)
+  }),
+  
+  deleteBooking: (bookingId) => apiRequest(`/bookings/${bookingId}`, {
+    method: "DELETE"
+  }),
+  
+  getBookingsByHotel: (hotelId) => apiRequest(`/bookings?hotelId=${hotelId}`),
+  
+  getBookingsByBranch: (hotelId, branchId) => apiRequest(`/bookings?hotelId=${hotelId}&branchId=${branchId}`)
+};
