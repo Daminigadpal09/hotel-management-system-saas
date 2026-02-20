@@ -493,7 +493,6 @@ export default function SuperAdminDashboard() {
             </div>
           )}
         </div>
-      </main>
       </div>
       </div>
 

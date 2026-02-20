@@ -26,7 +26,7 @@ const getAuthHeaders = () => {
 const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem("token");
   
-  console.log("DEBUG: Token value:", token ? token.substring(0, 50) + "..." : "null");
+  console.log("DEBUG: API Request to:", endpoint, "Token exists:", !!token);
   
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: options.method || "GET",
@@ -84,7 +84,9 @@ const apiRequest = async (endpoint, options = {}) => {
     throw new Error(`API Error: ${errorMessage}`);
   }
   
-  return response.json();
+  const result = await response.json();
+  console.log("DEBUG: API Response:", result);
+  return result;
 };
 
 // Auth API calls
@@ -105,6 +107,8 @@ export const hotelAPI = {
   getHotels: () => apiRequest("/hotels"),
   
   getHotelById: (id) => apiRequest(`/hotels/${id}`),
+  
+  getHotelRooms: (id) => apiRequest(`/hotels/${id}/rooms`),
   
   createHotel: (hotelData) => apiRequest("/hotels", {
     method: "POST",
@@ -224,4 +228,28 @@ export const bookingAPI = {
   getBookingsByHotel: (hotelId) => apiRequest(`/bookings?hotelId=${hotelId}`),
   
   getBookingsByBranch: (hotelId, branchId) => apiRequest(`/bookings?hotelId=${hotelId}&branchId=${branchId}`)
+};
+
+// User Management API calls
+export const userAPI = {
+  getUsers: (hotelId) => apiRequest(`/hotels/${hotelId}/users`),
+  
+  getAllUsers: () => {
+    console.log("getAllUsers API called");
+    return apiRequest(`/hotels/users/all`);
+  },
+  
+  createUser: (hotelId, userData) => apiRequest(`/hotels/${hotelId}/users`, {
+    method: "POST",
+    body: JSON.stringify(userData)
+  }),
+  
+  updateUser: (hotelId, userId, userData) => apiRequest(`/hotels/${hotelId}/users/${userId}`, {
+    method: "PUT",
+    body: JSON.stringify(userData)
+  }),
+  
+  deleteUser: (hotelId, userId) => apiRequest(`/hotels/${hotelId}/users/${userId}`, {
+    method: "DELETE"
+  })
 };

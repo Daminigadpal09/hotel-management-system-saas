@@ -1,5 +1,7 @@
 import Hotel from "../model/hotel.js";
 import Branch from "../model/Branch.js";
+import User from "../model/User.js";
+import bcrypt from "bcryptjs";
 
 // 🏨 Create Hotel (for hotel owners)
 export const createHotel = async (req, res) => {
@@ -207,15 +209,6 @@ export const getBranches = async (req, res) => {
       });
     }
 
-    // Check access
-    // Temporarily disable ownership check for testing
-    // if (req.user.role !== "super_admin" && hotel.owner_id.toString() !== req.user.id) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: "Access denied"
-    //   });
-    // }
-
     const branches = await Branch.find({ hotel_id: hotelId }).sort({ createdAt: -1 });
 
     res.json({
@@ -223,6 +216,245 @@ export const getBranches = async (req, res) => {
       data: branches
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// 👥 Create User (for hotel owner to add staff)
+export const createUser = async (req, res) => {
+  try {
+    const { hotelId } = req.params;
+    const { name, email, password, role, branch_id } = req.body;
+    
+    // Check if hotel exists and user owns it
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found"
+      });
+    }
+
+    // Check ownership
+    if (req.user.role !== "super_admin" && String(hotel.owner_id) !== String(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied"
+      });
+    }
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered"
+      });
+    }
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role,
+      hotel_id: hotelId,
+      branch_id: branch_id || null,
+      status: "active"
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        hotel_id: user.hotel_id,
+        branch_id: user.branch_id,
+        status: user.status
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// 👥 Get Users by Hotel
+export const getUsers = async (req, res) => {
+  try {
+    const { hotelId } = req.params;
+    
+    // Check if hotel exists
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found"
+      });
+    }
+
+    // Check ownership
+    if (req.user.role !== "super_admin" && String(hotel.owner_id) !== String(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied"
+      });
+    }
+
+    const users = await User.find({ hotel_id: hotelId })
+      .select("-password")
+      .populate("branch_id", "name")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// 👥 Update User
+export const updateUser = async (req, res) => {
+  try {
+    const { hotelId, userId } = req.params;
+    const { name, email, role, branch_id, status } = req.body;
+    
+    // Check if hotel exists and user owns it
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found"
+      });
+    }
+
+    // Check ownership
+    if (req.user.role !== "super_admin" && String(hotel.owner_id) !== String(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied"
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if user belongs to this hotel
+    if (String(user.hotel_id) !== String(hotelId)) {
+      return res.status(403).json({
+        success: false,
+        message: "User does not belong to this hotel"
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { name, email, role, branch_id, status },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    res.json({
+      success: true,
+      message: "User updated successfully",
+      data: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// 👥 Delete User
+export const deleteUser = async (req, res) => {
+  try {
+    const { hotelId, userId } = req.params;
+    
+    // Check if hotel exists and user owns it
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found"
+      });
+    }
+
+    // Check ownership
+    if (req.user.role !== "super_admin" && String(hotel.owner_id) !== String(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied"
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if user belongs to this hotel
+    if (String(user.hotel_id) !== String(hotelId)) {
+      return res.status(403).json({
+        success: false,
+        message: "User does not belong to this hotel"
+      });
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    res.json({
+      success: true,
+      message: "User deleted successfully"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// 👥 Get All Users for Owner (all users in database)
+export const getAllUsersForOwner = async (req, res) => {
+  try {
+    console.log("getAllUsersForOwner called by:", req.user);
+    
+    // Get all users from the database (excluding passwords)
+    const users = await User.find()
+      .select("-password")
+      .populate("hotel_id", "name")
+      .populate("branch_id", "name")
+      .sort({ createdAt: -1 });
+
+    console.log("Found users:", users.length);
+
+    res.json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    console.error("Error in getAllUsersForOwner:", error);
     res.status(500).json({
       success: false,
       message: error.message

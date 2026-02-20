@@ -7,7 +7,7 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "owner"
+    role: "super_admin"
   });
   const navigate = useNavigate();
 
@@ -46,8 +46,18 @@ export default function Register() {
       const data = await response.json();
       
       if (response.ok) {
-        alert("Registration successful! Please login.");
-        navigate("/login");
+        // Store token and user data
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        
+        // Redirect based on role
+        if (data.user.role === "super_admin") {
+          navigate("/super-admin");
+        } else if (data.user.role === "owner") {
+          navigate("/owner-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         alert(data.message || "Registration failed");
       }
@@ -129,6 +139,7 @@ export default function Register() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
+              <option value="super_admin">Super Admin</option>
               <option value="owner">Hotel Owner</option>
               <option value="branch_manager">Branch Manager</option>
               <option value="receptionist">Receptionist</option>
