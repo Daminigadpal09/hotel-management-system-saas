@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { roomAPI, branchAPI } from "../services/api.js";
+import { roomAPI, branchAPI, hotelAPI } from "../services/api.js";
 
 export default function RoomManagement() {
   const { hotelId, branchId } = useParams();
@@ -8,11 +9,18 @@ export default function RoomManagement() {
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ category: "", status: "", floor: "" });
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState(null);
+  const [availableHotels, setAvailableHotels] = useState([]);
   const navigate = useNavigate();
 
+  // Get user data to determine hotel
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [userHotelId, setUserHotelId] = useState(hotelId || user.hotel_id || user.id);
+
   // Handle both route patterns: /rooms/:hotelId/:branchId and /hotel-rooms/:hotelId
-  const actualBranchId = branchId || null; // branchId will be undefined for /hotel-rooms route
-  const isHotelWideView = !branchId; // true for /hotel-rooms route
+  const actualBranchId = branchId || null; // branchId will be undefined for /room-management route
+  const isHotelWideView = !branchId; // true for /room-management route
 
   const [roomForm, setRoomForm] = useState({
     roomNumber: "",
@@ -25,12 +33,76 @@ export default function RoomManagement() {
     capacity: 2,
     bedCount: 1,
     description: "",
-    amenities: []
+    amenities: [],
+    inventory: {
+      towels: 0,
+      soap: 0,
+      shampoo: 0,
+      waterBottles: 0,
+      bedsheets: 0,
+      pillows: 0,
+      blankets: 0,
+      cleaningSupplies: 0,
+      lightbulbs: 0,
+      remoteControl: 0,
+      safe: 0,
+      minibarItems: 0,
+      kettle: 0,
+      iron: 0,
+      hairdryer: 0,
+      coffee: 0,
+      tea: 0,
+      cups: 0,
+      glasses: 0,
+      slippers: 0,
+      robes: 0,
+      toiletries: 0
+    }
   });
 
   useEffect(() => {
-    fetchRooms();
-  }, [hotelId, actualBranchId, isHotelWideView, filter]);
+    fetchAvailableHotels();
+  }, []);
+
+  useEffect(() => {
+    if (userHotelId && availableHotels.find(h => h._id === userHotelId)) {
+      fetchBranches();
+    }
+  }, [userHotelId, availableHotels]);
+
+  useEffect(() => {
+    if (userHotelId && availableHotels.find(h => h._id === userHotelId)) {
+      fetchRooms();
+    }
+  }, [userHotelId, actualBranchId, selectedBranch, isHotelWideView, filter, availableHotels]);
+
+  const fetchAvailableHotels = async () => {
+    try {
+      const hotelsData = await hotelAPI.getHotels();
+      setAvailableHotels(hotelsData.data || []);
+      
+      // If current hotelId is invalid, set to first available hotel
+      if (!userHotelId || !hotelsData.data?.find(h => h._id === userHotelId)) {
+        if (hotelsData.data?.length > 0) {
+          setUserHotelId(hotelsData.data[0]._id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching hotels:", error);
+    }
+  };
+
+  const fetchBranches = async () => {
+    try {
+      const branchesData = await branchAPI.getBranches(userHotelId);
+      setBranches(branchesData.data || []);
+      if (!actualBranchId && branchesData.data?.length > 0) {
+        setSelectedBranch(branchesData.data[0]._id);
+      }
+    } catch (error) {
+      console.error("Error fetching branches:", error);
+    }
+  };
 
   const fetchRooms = async () => {
     try {
@@ -38,12 +110,12 @@ export default function RoomManagement() {
       
       if (isHotelWideView) {
         // Hotel-wide view: fetch all branches first, then all rooms
-        const branchesData = await branchAPI.getBranches(hotelId);
+        const branchesData = await branchAPI.getBranches(userHotelId);
         let allRooms = [];
         
         for (const branch of branchesData.data) {
           try {
-            const roomsData = await roomAPI.getRooms(hotelId, branch._id);
+            const roomsData = await roomAPI.getRooms(userHotelId, branch._id);
             allRooms = [...allRooms, ...roomsData.data];
           } catch (error) {
             console.error(`Error fetching rooms for branch ${branch._id}:`, error);
@@ -53,7 +125,12 @@ export default function RoomManagement() {
         data = { data: allRooms };
       } else {
         // Branch-specific view: fetch rooms for specific branch
-        data = await roomAPI.getRooms(hotelId, actualBranchId, filter);
+        const branchToUse = actualBranchId || selectedBranch;
+        if (!branchToUse) {
+          data = { data: [] };
+        } else {
+          data = await roomAPI.getRooms(userHotelId, branchToUse, filter);
+        }
       }
       
       setRooms(data.data);
@@ -68,7 +145,14 @@ export default function RoomManagement() {
     e.preventDefault();
     
     try {
-      const data = await roomAPI.createRoom(hotelId, branchId, roomForm);
+      // For general room management, we need to select a branch first
+      if (!actualBranchId) {
+        alert("Please select a branch first to create rooms");
+        navigate(`/branches/${userHotelId}`);
+        return;
+      }
+      
+      const data = await roomAPI.createRoom(userHotelId, actualBranchId || selectedBranch, roomForm);
       
       if (data) {
         alert("Room created successfully!");
@@ -95,7 +179,13 @@ export default function RoomManagement() {
 
   const handleUpdateRoomStatus = async (roomId, status) => {
     try {
-      const data = await roomAPI.updateRoomStatus(hotelId, branchId, roomId, status);
+      if (!actualBranchId) {
+        alert("Please select a branch first to manage rooms");
+        navigate(`/branches/${userHotelId}`);
+        return;
+      }
+      
+      const data = await roomAPI.updateRoomStatus(userHotelId, actualBranchId || selectedBranch, roomId, status);
       if (data) {
         alert(`Room status updated to ${status}`);
         fetchRooms();
@@ -108,7 +198,13 @@ export default function RoomManagement() {
   const handleDeleteRoom = async (roomId) => {
     if (window.confirm("Are you sure you want to delete this room?")) {
       try {
-        await roomAPI.deleteRoom(hotelId, branchId, roomId);
+        if (!actualBranchId) {
+          alert("Please select a branch first to manage rooms");
+          navigate(`/branches/${userHotelId}`);
+          return;
+        }
+        
+        await roomAPI.deleteRoom(userHotelId, actualBranchId || selectedBranch, roomId);
         alert("Room deleted successfully!");
         fetchRooms();
       } catch (error) {
@@ -135,7 +231,7 @@ export default function RoomManagement() {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate(`/branches/${hotelId}`)}
+                onClick={() => navigate(`/branches/${userHotelId}`)}
                 className="text-sm text-gray-600 hover:text-gray-800"
               >
                 ← Back to Branches
@@ -158,6 +254,44 @@ export default function RoomManagement() {
                 Add New Room
               </button>
             </div>
+
+            {/* Hotel Selector */}
+            {!hotelId && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Hotel</label>
+                <select
+                  value={userHotelId || ""}
+                  onChange={(e) => setUserHotelId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Select a hotel...</option>
+                  {availableHotels.map((hotel) => (
+                    <option key={hotel._id} value={hotel._id}>
+                      {hotel.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Branch Selector */}
+            {(!actualBranchId && userHotelId) && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Branch</label>
+                <select
+                  value={selectedBranch || ""}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Select a branch...</option>
+                  {branches.map((branch) => (
+                    <option key={branch._id} value={branch._id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Filters */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -335,6 +469,26 @@ export default function RoomManagement() {
                     rows="3"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Inventory Items
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {Object.entries(roomForm.inventory).map(([item, count]) => (
+                      <div key={item}>
+                        <label className="block text-xs text-gray-600 mb-1">{item.replace(/([A-Z])/g, ' $1').replace(/^./, (match) => match.toUpperCase() + item.substring(1).toLowerCase())}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={count}
+                          onChange={(e) => setRoomForm({...roomForm, inventory: {...roomForm.inventory, [item]: parseInt(e.target.value) || 0}})}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          placeholder="0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <div className="md:col-span-2 flex gap-2">
                   <button
                     type="submit"
@@ -389,6 +543,9 @@ export default function RoomManagement() {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Inventory
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -421,6 +578,17 @@ export default function RoomManagement() {
                         }`}>
                           {room.status}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="text-xs text-gray-500">
+                          {Object.entries(room.inventory || {}).map(([item, count]) => (
+                            <React.Fragment key={item}>
+                              <span className="mr-2">
+                                {count} {item.replace(/([A-Z])/g, ' $1').replace(/^./, (match) => match.toUpperCase() + item.substring(1).toLowerCase())}
+                              </span>
+                            </React.Fragment>
+                          ))}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button

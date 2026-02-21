@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import HotelOwnerDashboard from "./pages/HotelOwnerDashboard";
 import BranchManagement from "./pages/BranchManagement";
-import RoomManagement from "./pages/RoomManagement";
+import RoomManagement from "./pages/RoomManagementEnhanced";
 import BookingManagement from "./pages/BookingManagement";
 import ViewHotel from "./pages/ViewHotel";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -54,6 +54,14 @@ function App() {
         />
         <Route
           path="/rooms/:hotelId/:branchId"
+          element={
+            <ProtectedRoute>
+              <RoomManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/room-management"
           element={
             <ProtectedRoute>
               <RoomManagement />

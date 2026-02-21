@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { hotelAPI, userAPI } from "../services/api.js";
+import { hotelAPI, userAPI, branchAPI, roomAPI } from "../services/api.js";
 
 export default function HotelOwnerDashboard() {
   const [hotels, setHotels] = useState([]);
@@ -37,26 +37,37 @@ export default function HotelOwnerDashboard() {
     status: "active"
   });
 
-  useEffect(() => {
-    fetchHotels();
-  }, []);
-
   const fetchHotels = async () => {
     try {
+      console.log("DEBUG: Fetching hotels...");
       const data = await hotelAPI.getHotels();
-      setHotels(data.data);
+      console.log("DEBUG: Hotels API response:", data);
+      setHotels(data.data || []);
+      console.log("DEBUG: Hotels set:", data.data || []);
       
       // Fetch rooms for each hotel
       const hotelsWithRoomData = await Promise.all(
-        data.data.map(async (hotel) => {
+        (data.data || []).map(async (hotel) => {
           try {
-            const roomsResponse = await hotelAPI.getHotelRooms(hotel._id);
-            const rooms = roomsResponse.data || [];
-            const totalRooms = rooms.length;
-            const availableRooms = rooms.filter(r => r.status === 'available').length;
-            return { ...hotel, totalRooms, availableRooms, branches: hotel.branches?.length || 0 };
-          } catch (error) {
-            return { ...hotel, totalRooms: 0, availableRooms: 0, branches: hotel.branches?.length || 0 };
+            // First get branches for this hotel
+            const branchesResponse = await branchAPI.getBranches(hotel._id);
+            const branches = branchesResponse.data || [];
+            
+            // Then get rooms for each branch
+            let allRooms = [];
+            if (branches.length > 0) {
+              const roomsPromises = branches.map(branch => 
+                roomAPI.getRooms(hotel._id, branch._id).catch(() => ({ data: [] }))
+              );
+              const roomsResponses = await Promise.all(roomsPromises);
+              allRooms = roomsResponses.flatMap(response => response.data || []);
+            }
+            
+            const totalRooms = allRooms.length;
+            const availableRooms = allRooms.filter(r => r.status === 'available').length;
+            return { ...hotel, totalRooms, availableRooms, branches: branches.length };
+          } catch {
+            return { ...hotel, totalRooms: 0, availableRooms: 0, branches: 0 };
           }
         })
       );
@@ -67,6 +78,10 @@ export default function HotelOwnerDashboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchHotels();
+  }, []);
 
   const handleCreateHotel = async (e) => {
     e.preventDefault();
@@ -89,6 +104,7 @@ export default function HotelOwnerDashboard() {
   };
 
   const handleOpenUserManagement = async (hotelId, showAll = false) => {
+    console.log("handleOpenUserManagement called with:", { hotelId, showAll });
     setSelectedHotelId(hotelId);
     setShowAllUsers(showAll);
     setShowUserManagement(true);
@@ -96,12 +112,14 @@ export default function HotelOwnerDashboard() {
     setEditingUser(null);
     
     if (showAll) {
+      console.log("Calling fetchAllUsers...");
       await fetchAllUsers();
     } else if (hotelId) {
+      console.log("Calling fetchUsers for hotel:", hotelId);
       await fetchUsers(hotelId);
     }
     
-    // Fetch branches for the hotel
+    // Fetch branches for hotel
     if (hotelId && !showAll) {
       try {
         const branchesResponse = await hotelAPI.getBranches(hotelId);
@@ -127,19 +145,19 @@ export default function HotelOwnerDashboard() {
 
   const fetchAllUsers = async () => {
     try {
-      // Fetch users from all hotels
-      const allUsers = [];
-      for (const hotel of hotels) {
-        try {
-          const data = await userAPI.getUsers(hotel._id);
-          if (data.data) {
-            allUsers.push(...data.data.map(u => ({ ...u, hotel_id: { _id: hotel._id, name: hotel.name } })));
-          }
-        } catch (error) {
-          console.error(`Error fetching users for hotel ${hotel._id}:`, error);
-        }
+      console.log("fetchAllUsers called - fetching all users from database");
+      // Fetch all users from database using the getAllUsers endpoint
+      const data = await userAPI.getAllUsers();
+      console.log("Got all users data:", data);
+      
+      if (data && data.data) {
+        // Users already have hotel_id populated from backend
+        setUsers(data.data);
+        console.log("Setting users:", data.data.length);
+      } else {
+        setUsers([]);
+        console.log("No users found in database");
       }
-      setUsers(allUsers);
     } catch (error) {
       console.error("Error fetching all users:", error);
       setUsers([]);
@@ -295,6 +313,7 @@ export default function HotelOwnerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+
       {/* Vertical Sidebar Navigation */}
       <div className="w-64 bg-white shadow-lg">
         <div className="p-6">
@@ -334,6 +353,15 @@ export default function HotelOwnerDashboard() {
                 </svg>
                 My Hotels
               </Link>
+              <Link
+                to="/room-management"
+                className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              >
+                <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v7a3 3 0 003 3h3a3 3 0 003-3v-7m-6 0v7a3 3 0 003 3h3a3 3 0 003-3v-7m-6 0v7a3 3 0 003 3h3a3 3 0 003-3v-7" />
+                </svg>
+                Room Management
+              </Link>
               <button
                 onClick={() => handleOpenUserManagement(null, true)}
                 className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
@@ -365,7 +393,7 @@ export default function HotelOwnerDashboard() {
                 className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
               >
                 <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7-7M5 10v7a3 3 0 003 3h3a3 3 0 003-3v-7m-6 0v7a3 3 0 003 3h3a3 3 0 003-3v-7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v7a3 3 0 003 3h3a3 3 0 003-3v-7m-6 0v7a3 3 0 003 3h3a3 3 0 003-3v-7" />
                 </svg>
                 Back to Home
               </Link>
@@ -474,11 +502,14 @@ export default function HotelOwnerDashboard() {
                   <div className="overflow-hidden">
                     <div className="grid grid-cols-1 gap-4 p-6">
                       {hotelsWithRooms.map((hotel) => (
-                        <div key={hotel?._id || Math.random()} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div key={hotel?._id || `hotel-${hotel?.name || 'unknown'}`} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-3">
                             <div>
                               <h4 className="text-lg font-medium text-gray-900">{hotel?.name || 'Unknown Hotel'}</h4>
                               <p className="text-sm text-gray-500">{hotel.email}</p>
+                              <p className="text-xs text-gray-400 mt-1">{hotel?.address}</p>
+                              <p className="text-xs text-gray-400">{hotel?.city}, {hotel?.state}</p>
+                              <p className="text-xs text-gray-400">{hotel?.phone}</p>
                             </div>
                             <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                               hotel.status === 'active' ? 'bg-green-100 text-green-800' :
@@ -704,6 +735,9 @@ export default function HotelOwnerDashboard() {
                 <p className="text-sm text-gray-600">
                   {showAllUsers ? "Manage all users in the system" : "Manage staff members for this hotel"}
                 </p>
+                <span className="text-xs text-gray-500">
+                  (Total: {users.length} users)
+                </span>
                 <button
                   onClick={() => {
                     setShowAddUser(true);

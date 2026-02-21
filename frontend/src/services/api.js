@@ -108,7 +108,7 @@ export const hotelAPI = {
   
   getHotelById: (id) => apiRequest(`/hotels/${id}`),
   
-  getHotelRooms: (id) => apiRequest(`/hotels/${id}/rooms`),
+  getHotelRooms: (hotelId, branchId) => roomAPI.getRooms(hotelId, branchId),
   
   createHotel: (hotelData) => apiRequest("/hotels", {
     method: "POST",
