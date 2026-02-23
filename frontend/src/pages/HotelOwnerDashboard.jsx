@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { hotelAPI, userAPI, branchAPI, roomAPI } from "../services/api.js";
+import { hotelAPI, userAPI, branchAPI, roomAPI, bookingAPI } from "../services/api.js";
 
 export default function HotelOwnerDashboard() {
   const [hotels, setHotels] = useState([]);
   const [hotelsWithRooms, setHotelsWithRooms] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [showAddHotel, setShowAddHotel] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -79,8 +80,18 @@ export default function HotelOwnerDashboard() {
     }
   };
 
+  const fetchBookings = async () => {
+    try {
+      const data = await bookingAPI.getBookings();
+      setBookings(data.data || data);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    }
+  };
+
   useEffect(() => {
     fetchHotels();
+    fetchBookings();
   }, []);
 
   const handleCreateHotel = async (e) => {
@@ -98,6 +109,7 @@ export default function HotelOwnerDashboard() {
         gstNumber: ""
       });
       fetchHotels();
+      fetchBookings(); // Refresh bookings as well
     } catch (error) {
       alert("Error creating hotel: " + error.message);
     }
@@ -362,6 +374,33 @@ export default function HotelOwnerDashboard() {
                 </svg>
                 Room Management
               </Link>
+              <Link
+                to="/bookings"
+                className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              >
+                <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                📅 Booking Management
+              </Link>
+              <Link
+                to="/guests"
+                className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              >
+                <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                👥 Guest Management
+              </Link>
+              <Link
+                to="/billing"
+                className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              >
+                <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 4.077a1 1 0 01-1.123.606l-2.257-4.077a1 1 0 01-.502-1.21L7.228 3.684A1 1 0 018.172 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002 2V5z" />
+                </svg>
+                💰 Billing & Payments
+              </Link>
               <button
                 onClick={() => handleOpenUserManagement(null, true)}
                 className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
@@ -443,7 +482,7 @@ export default function HotelOwnerDashboard() {
           <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
               {/* Stats Section */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow">
                   <h3 className="text-sm font-medium text-gray-500">Total Hotels</h3>
                   <p className="text-2xl font-bold text-gray-900 mt-2">{hotels.length}</p>
@@ -455,9 +494,13 @@ export default function HotelOwnerDashboard() {
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-sm font-medium text-gray-500">Total Rooms</h3>
-                  <p className="text-2xl font-bold text-blue-600 mt-2">
-                    {hotelsWithRooms.reduce((sum, hotel) => sum + hotel.totalRooms, 0)}
+                  <h3 className="text-sm font-medium text-gray-500">Total Bookings</h3>
+                  <p className="text-2xl font-bold text-blue-600 mt-2">{bookings.length}</p>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow">
+                  <h3 className="text-sm font-medium text-gray-500">Checked In</h3>
+                  <p className="text-2xl font-bold text-green-600 mt-2">
+                    {bookings.filter(b => b.status === 'CHECKED_IN').length}
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow">
@@ -577,6 +620,22 @@ export default function HotelOwnerDashboard() {
                               Rooms
                             </button>
                             <button
+                              onClick={() => {
+                                console.log("Booking button clicked for hotel:", hotel?._id);
+                                if (hotel?._id) {
+                                  navigate(`/bookings/${hotel._id}`);
+                                } else {
+                                  console.error("No hotel ID found");
+                                }
+                              }}
+                              className="inline-flex items-center px-3 py-1.5 border border-blue-300 shadow-sm text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 font-semibold"
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              📅 Bookings
+                            </button>
+                            <button
                               onClick={() => hotel?._id && handleOpenUserManagement(hotel._id)}
                               className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-purple-700 bg-purple-50 hover:bg-purple-100"
                             >
@@ -584,6 +643,15 @@ export default function HotelOwnerDashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                               </svg>
                               Users
+                            </button>
+                            <button
+                              onClick={() => navigate(`/guests/${hotel._id}`)}
+                              className="inline-flex items-center px-3 py-1.5 border border-green-300 shadow-sm text-xs font-medium rounded text-green-700 bg-green-50 hover:bg-green-100"
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              👥 Guests
                             </button>
                             <button
                               onClick={() => navigate(`/edit-hotel/${hotel._id}`)}
@@ -601,6 +669,93 @@ export default function HotelOwnerDashboard() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Recent Bookings Section */}
+            <div className="bg-white rounded-lg shadow mt-8">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-gray-900">Recent Bookings</h3>
+                  <Link
+                    to="/bookings"
+                    className="text-sm text-indigo-600 hover:text-indigo-800"
+                  >
+                    View All Bookings →
+                  </Link>
+                </div>
+              </div>
+              {bookings.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No bookings yet</h3>
+                  <p className="text-gray-500 mb-4">Start creating bookings to see them here.</p>
+                  <Link
+                    to="/bookings"
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
+                  >
+                    Create First Booking
+                  </Link>
+                </div>
+              ) : (
+                <div className="overflow-hidden">
+                  <div className="grid grid-cols-1 gap-4 p-6">
+                    {bookings.slice(0, 5).map((booking) => (
+                      <div key={booking._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3">
+                              <div className="flex-shrink-0">
+                                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-900">{booking.guestName}</h4>
+                                <p className="text-sm text-gray-500">
+                                  Room {booking.roomId?.roomNumber || booking.roomId} • {booking.roomId?.category || 'N/A'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+                              <span>Check-in: {new Date(booking.checkIn).toLocaleDateString()}</span>
+                              <span>Check-out: {new Date(booking.checkOut).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end space-y-2">
+                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              booking.status === 'BOOKED' ? 'bg-blue-100 text-blue-800' :
+                              booking.status === 'CHECKED_IN' ? 'bg-green-100 text-green-800' :
+                              booking.status === 'CHECKED_OUT' ? 'bg-gray-100 text-gray-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {booking.status}
+                            </span>
+                            <span className="text-sm font-medium text-gray-900">
+                              ${booking.totalAmount || 0}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {bookings.length > 5 && (
+                    <div className="px-6 py-4 border-t border-gray-200">
+                      <Link
+                        to="/bookings"
+                        className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                      >
+                        View all {bookings.length} bookings →
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </main>

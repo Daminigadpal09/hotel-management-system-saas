@@ -319,6 +319,12 @@ export default function BranchManagement() {
                           Manage Rooms
                         </button>
                         <button
+                          onClick={() => navigate(`/bookings/${hotelId}/${branch._id}`)}
+                          className="text-blue-600 hover:text-blue-900 mr-2"
+                        >
+                          Manage Bookings
+                        </button>
+                        <button
                           onClick={() => handleDeleteBranch(branch._id)}
                           className="text-red-600 hover:text-red-900"
                         >

@@ -5,6 +5,7 @@ const bookingSchema=new mongoose.Schema({
     hotelId:{type:mongoose.Schema.Types.ObjectId,ref:"Hotel"},
     branchId:{type:mongoose.Schema.Types.ObjectId,ref:"Branch"},
     roomId:{type:mongoose.Schema.Types.ObjectId,ref:"Room"},
+    guestId:{type:mongoose.Schema.Types.ObjectId,ref:"Guest"},
     guestName:String,
     checkIn:Date,
     checkOut:Date,

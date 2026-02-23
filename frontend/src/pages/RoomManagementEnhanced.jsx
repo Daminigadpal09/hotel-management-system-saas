@@ -266,6 +266,11 @@ export default function RoomManagementEnhanced() {
   };
 
   const handleUpdateRoomStatus = async (roomId, status) => {
+    if (!actualBranchId) {
+      alert("Please select a branch first to manage rooms");
+      return;
+    }
+    
     try {
       const data = await roomAPI.updateRoomStatus(hotelId, actualBranchId, roomId, status);
       if (data) {
@@ -278,6 +283,11 @@ export default function RoomManagementEnhanced() {
   };
 
   const handleDeleteRoom = async (roomId) => {
+    if (!actualBranchId) {
+      alert("Please select a branch first to manage rooms");
+      return;
+    }
+    
     if (window.confirm("Are you sure you want to delete this room?")) {
       try {
         await roomAPI.deleteRoom(hotelId, actualBranchId, roomId);
@@ -863,7 +873,7 @@ export default function RoomManagementEnhanced() {
                         </td>
                       </tr>
                     )))}
-                  )}
+                  
                 </tbody>
               </table>
             </div>

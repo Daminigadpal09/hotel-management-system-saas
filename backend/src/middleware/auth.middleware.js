@@ -54,8 +54,8 @@ export const protect = async (req, res, next) => {
     req.user = {
       id: user._id,
       role: user.role,
-      hotel_id: user.hotel_id,
-      branch_id: user.branch_id,
+      hotelId: user.hotel_id || user._id, // Use user ID as hotelId for owners without hotel_id
+      branchId: user.branch_id,
     };
 
     console.log("DEBUG: Auth middleware - req.user set:", req.user);
@@ -104,11 +104,11 @@ export const authorize = (...roles) => {
     if (req.user.role === "branch_manager" && req.params.branchId) {
       console.log("DEBUG: Branch manager access check:", {
         userRole: req.user.role,
-        userBranchId: req.user.branch_id,
+        userBranchId: req.user.branchId,
         paramBranchId: req.params.branchId,
-        accessAllowed: !req.user.branch_id || req.user.branch_id.toString() === req.params.branchId
+        accessAllowed: !req.user.branchId || req.user.branchId.toString() === req.params.branchId
       });
-      if (req.user.branch_id && req.user.branch_id.toString() !== req.params.branchId) {
+      if (req.user.branchId && req.user.branchId.toString() !== req.params.branchId) {
         return res.status(403).json({
           success: false,
           message: "Access denied. You can only access your assigned branch",
@@ -120,11 +120,11 @@ export const authorize = (...roles) => {
     if (["receptionist", "housekeeping", "accountant"].includes(req.user.role) && req.params.branchId) {
       console.log("DEBUG: Staff access check:", {
         userRole: req.user.role,
-        userBranchId: req.user.branch_id,
+        userBranchId: req.user.branchId,
         paramBranchId: req.params.branchId,
-        accessAllowed: !req.user.branch_id || req.user.branch_id.toString() === req.params.branchId
+        accessAllowed: !req.user.branchId || req.user.branchId.toString() === req.params.branchId
       });
-      if (req.user.branch_id && req.user.branch_id.toString() !== req.params.branchId) {
+      if (req.user.branchId && req.user.branchId.toString() !== req.params.branchId) {
         return res.status(403).json({
           success: false,
           message: "Access denied. You can only access your assigned branch",
@@ -183,7 +183,7 @@ export const validateHotelAccess = async (req, res, next) => {
       // }
     } else {
       // For other roles, check if they belong to this hotel
-      if (req.user.hotel_id && req.user.hotel_id.toString() !== hotelId) {
+      if (req.user.hotelId && req.user.hotelId.toString() !== hotelId) {
         return res.status(403).json({
           success: false,
           message: "Access denied: You don't belong to this hotel",
@@ -215,7 +215,7 @@ export const validateBranchAccess = async (req, res, next) => {
     }
 
     // For branch managers and other staff, check if they belong to this branch
-    if (req.user.branch_id && req.user.branch_id.toString() !== branchId) {
+    if (req.user.branchId && req.user.branchId.toString() !== branchId) {
       return res.status(403).json({
         success: false,
         message: "Access denied: You don't belong to this branch",

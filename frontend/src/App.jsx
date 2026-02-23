@@ -9,7 +9,9 @@ import HotelOwnerDashboard from "./pages/HotelOwnerDashboard";
 import BranchManagement from "./pages/BranchManagement";
 import RoomManagement from "./pages/RoomManagementEnhanced";
 import BookingManagement from "./pages/BookingManagement";
+import GuestManagement from "./pages/GuestManagement";
 import ViewHotel from "./pages/ViewHotel";
+import BillingManagement from "./pages/BillingManagement";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -24,7 +26,7 @@ function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <HotelOwnerDashboard />
             </ProtectedRoute>
           }
         />
@@ -85,10 +87,50 @@ function App() {
           }
         />
         <Route
+          path="/bookings/:hotelId"
+          element={
+            <ProtectedRoute>
+              <BookingManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bookings/:hotelId/:branchId"
+          element={
+            <ProtectedRoute>
+              <BookingManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/guests"
+          element={
+            <ProtectedRoute>
+              <GuestManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/guests/:hotelId"
+          element={
+            <ProtectedRoute>
+              <GuestManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/view-hotel/:hotelId"
           element={
             <ProtectedRoute>
               <ViewHotel />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing"
+          element={
+            <ProtectedRoute>
+              <BillingManagement />
             </ProtectedRoute>
           }
         />

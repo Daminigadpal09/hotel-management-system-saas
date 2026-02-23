@@ -216,6 +216,8 @@ export const bookingAPI = {
     body: JSON.stringify(bookingData)
   }),
   
+  getBookingById: (bookingId) => apiRequest(`/bookings/${bookingId}`),
+  
   updateBooking: (bookingId, bookingData) => apiRequest(`/bookings/${bookingId}`, {
     method: "PUT",
     body: JSON.stringify(bookingData)
@@ -224,6 +226,23 @@ export const bookingAPI = {
   deleteBooking: (bookingId) => apiRequest(`/bookings/${bookingId}`, {
     method: "DELETE"
   }),
+  
+  checkIn: (bookingId) => apiRequest(`/bookings/${bookingId}/checkin`, {
+    method: "PATCH"
+  }),
+  
+  checkOut: (bookingId) => apiRequest(`/bookings/${bookingId}/checkout`, {
+    method: "PATCH"
+  }),
+  
+  cancelBooking: (bookingId) => apiRequest(`/bookings/${bookingId}/cancel`, {
+    method: "PATCH"
+  }),
+  
+  getBookingHistory: (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    return apiRequest(`/bookings/history${params ? '?' + params : ''}`);
+  },
   
   getBookingsByHotel: (hotelId) => apiRequest(`/bookings?hotelId=${hotelId}`),
   
@@ -252,4 +271,112 @@ export const userAPI = {
   deleteUser: (hotelId, userId) => apiRequest(`/hotels/${hotelId}/users/${userId}`, {
     method: "DELETE"
   })
+};
+
+// Guest Management APIs
+export const guestAPI = {
+  createGuest: (guestData) => apiRequest('/guests', {
+    method: 'POST',
+    body: JSON.stringify(guestData)
+  }),
+  
+  getGuests: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/guests${queryString ? '?' + queryString : ''}`);
+  },
+  
+  getGuestById: (id) => apiRequest(`/guests/${id}`),
+  
+  updateGuest: (id, guestData) => apiRequest(`/guests/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(guestData)
+  }),
+  
+  deleteGuest: (id) => apiRequest(`/guests/${id}`, {
+    method: 'DELETE'
+  }),
+  
+  addVisit: (id, visitData) => apiRequest(`/guests/${id}/visits`, {
+    method: 'POST',
+    body: JSON.stringify(visitData)
+  }),
+  
+  blacklistGuest: (id, reason) => apiRequest(`/guests/${id}/blacklist`, {
+    method: 'POST',
+    body: JSON.stringify({ reason })
+  }),
+  
+  removeFromBlacklist: (id) => apiRequest(`/guests/${id}/blacklist`, {
+    method: 'DELETE'
+  }),
+  
+  uploadDocument: (id, formData) => {
+    const token = localStorage.getItem("token");
+    return fetch(`${API_BASE_URL}/guests/${id}/documents`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+  },
+  
+  getStatistics: () => apiRequest('/guests/statistics')
+};
+
+// Billing & Payments API
+export const billingAPI = {
+  // Invoice APIs
+  getInvoices: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/billing/invoices${queryString ? '?' + queryString : ''}`);
+  },
+  
+  createInvoice: (invoiceData) => apiRequest('/billing/invoices', {
+    method: 'POST',
+    body: JSON.stringify(invoiceData)
+  }),
+  
+  updateInvoice: (id, invoiceData) => apiRequest(`/billing/invoices/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(invoiceData)
+  }),
+  
+  deleteInvoice: (id) => apiRequest(`/billing/invoices/${id}`, {
+    method: 'DELETE'
+  }),
+  
+  generateInvoicePDF: (id) => apiRequest(`/billing/invoices/${id}/pdf`),
+  
+  // Payment APIs
+  getPayments: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/billing/payments${queryString ? '?' + queryString : ''}`);
+  },
+  
+  createPayment: (paymentData) => apiRequest('/billing/payments', {
+    method: 'POST',
+    body: JSON.stringify(paymentData)
+  }),
+  
+  updatePayment: (id, paymentData) => apiRequest(`/billing/payments/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(paymentData)
+  }),
+  
+  // Reports APIs
+  getBillingReports: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/billing/reports${queryString ? '?' + queryString : ''}`);
+  },
+  
+  getBranchRevenue: (branchId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/billing/revenue/branch/${branchId}${queryString ? '?' + queryString : ''}`);
+  },
+  
+  calculateTaxes: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/billing/taxes${queryString ? '?' + queryString : ''}`);
+  }
 };

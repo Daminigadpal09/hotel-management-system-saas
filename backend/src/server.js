@@ -10,6 +10,8 @@ import superAdminRoutes from "./routes/superAdminRoutes.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import maintenanceRoutes from "./routes/maintenanceRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import guestRoutes from "./routes/guestRoutes.js";
+import billingRoutes from "./routes/billingRoutes.js";
 
 dotenv.config();
 
@@ -18,6 +20,9 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -35,6 +40,8 @@ app.use("/api/super-admin", superAdminRoutes);
 app.use("/api", roomRoutes);
 app.use("/api", maintenanceRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/guests", guestRoutes);
+app.use("/api/billing", billingRoutes);
 
 // 404 Handler - using middleware
 app.use((req, res) => {
