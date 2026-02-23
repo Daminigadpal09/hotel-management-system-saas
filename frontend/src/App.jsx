@@ -6,6 +6,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import HotelOwnerDashboard from "./pages/HotelOwnerDashboard";
+import ReceptionistDashboard from "./pages/ReceptionistDashboard";
 import BranchManagement from "./pages/BranchManagement";
 import RoomManagement from "./pages/RoomManagementEnhanced";
 import BookingManagement from "./pages/BookingManagement";
@@ -35,6 +36,14 @@ function App() {
           element={
             <ProtectedRoute>
               <SuperAdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/receptionist-dashboard"
+          element={
+            <ProtectedRoute>
+              <ReceptionistDashboard />
             </ProtectedRoute>
           }
         />

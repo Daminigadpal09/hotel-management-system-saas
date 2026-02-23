@@ -33,6 +33,8 @@ export default function Login() {
           navigate("/super-admin");
         } else if (data.user.role === "owner") {
           navigate("/owner-dashboard");
+        } else if (data.user.role === "receptionist") {
+          navigate("/receptionist-dashboard");
         } else {
           navigate("/dashboard");
         }
