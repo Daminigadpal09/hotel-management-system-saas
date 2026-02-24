@@ -334,7 +334,7 @@ export default function HotelOwnerDashboard() {
               <span className="text-white font-bold text-lg">H</span>
             </div>
             <div className="ml-3">
-              <h1 className="text-xl font-semibold text-gray-900">Owner Panel</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Receptionist Mumbai</h1>
               <p className="text-sm text-gray-500">{user.name}</p>
             </div>
           </div>

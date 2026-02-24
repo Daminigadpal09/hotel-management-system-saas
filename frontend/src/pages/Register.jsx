@@ -7,7 +7,8 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "super_admin"
+    role: "super_admin",
+    branch: ""
   });
   const navigate = useNavigate();
 
@@ -39,7 +40,8 @@ export default function Register() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          role: formData.role
+          role: formData.role,
+          branch: formData.branch
         }),
       });
 
@@ -54,7 +56,9 @@ export default function Register() {
         if (data.user.role === "super_admin") {
           navigate("/super-admin");
         } else if (data.user.role === "owner") {
-          navigate("/owner-dashboard");
+          navigate("/dashboard");
+        } else if (data.user.role === "receptionist") {
+          navigate("/receptionist-dashboard");
         } else {
           navigate("/dashboard");
         }
@@ -147,6 +151,26 @@ export default function Register() {
               <option value="accountant">Accountant</option>
             </select>
           </div>
+          
+          {/* Branch dropdown - only show for receptionist role */}
+          {formData.role === "receptionist" && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Branch *
+              </label>
+              <select
+                name="branch"
+                value={formData.branch}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select Branch</option>
+                <option value="mumbai">Mumbai</option>
+                <option value="pune">Pune</option>
+              </select>
+            </div>
+          )}
           
           <button
             type="submit"

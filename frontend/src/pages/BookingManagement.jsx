@@ -24,7 +24,6 @@ export default function BookingManagement() {
 
   // Form state for new booking
   const [bookingForm, setBookingForm] = useState({
-    guestId: "",
     guestName: "",
     roomId: "",
     checkIn: "",
@@ -398,34 +397,13 @@ export default function BookingManagement() {
               </h3>
               <form onSubmit={editingBooking ? handleUpdateBooking : handleCreateBooking} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Guest</label>
-                  <select
-                    required
-                    value={bookingForm.guestId}
-                    onChange={(e) => {
-                      const selectedGuest = guests.find(g => g._id === e.target.value);
-                      setBookingForm({
-                        ...bookingForm, 
-                        guestId: e.target.value,
-                        guestName: selectedGuest ? selectedGuest.name : ""
-                      });
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    <option value="">Select Guest</option>
-                    {guests.map(guest => (
-                      <option key={guest._id} value={guest._id}>
-                        {guest.name} ({guest.phone})
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Guest Name *</label>
                   <input
                     type="text"
                     required
                     value={bookingForm.guestName}
                     onChange={(e) => setBookingForm({...bookingForm, guestName: e.target.value})}
-                    placeholder="Or enter guest name manually"
-                    className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
                 <div>

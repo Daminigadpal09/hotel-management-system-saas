@@ -33,6 +33,20 @@ const roomSchema = new mongoose.Schema({
         name: String,
         included: { type: Boolean, default: true }
     }],
+    inventory: {
+        towels: { type: Number, default: 0 },
+        bedsheets: { type: Number, default: 0 },
+        pillows: { type: Number, default: 0 },
+        blankets: { type: Number, default: 0 },
+        soap: { type: Number, default: 0 },
+        shampoo: { type: Number, default: 0 },
+        waterBottles: { type: Number, default: 0 },
+        coffee: { type: Number, default: 0 },
+        tea: { type: Number, default: 0 },
+        slippers: { type: Number, default: 0 },
+        robes: { type: Number, default: 0 },
+        toiletries: { type: Number, default: 0 }
+    },
     images: [String],
     description: { type: String },
     status: {

@@ -253,4 +253,4 @@ branchRevenueSchema.index({ branchId: 1, period: 1, startDate: -1 });
 
 export const Invoice = mongoose.model('Invoice', invoiceSchema);
 export const Payment = mongoose.model('Payment', paymentSchema);
-export const BranchRevenue = mongoose.model('BranchRevenue', branchRevenueSchema);
+export const HotelBranchRevenue = mongoose.model('HotelBranchRevenue', branchRevenueSchema);

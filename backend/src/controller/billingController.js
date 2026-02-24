@@ -1,25 +1,20 @@
 import mongoose from 'mongoose';
-import { Invoice, Payment, BranchRevenue } from '../model/Billing.js';
+import { Invoice, Payment, HotelBranchRevenue } from '../model/Billing.js';
 import { tenantFilter, branchTenantFilter } from '../utils/tenantFilter.js';
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
 
-// Generate invoice number
+// Generate invoice number with timestamp to ensure uniqueness
 const generateInvoiceNumber = async (hotelId, branchId) => {
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0');
+  const timestamp = Date.now();
+  const randomSuffix = Math.floor(Math.random() * 1000);
   
-  const count = await Invoice.countDocuments({
-    hotelId,
-    branchId,
-    createdAt: {
-      $gte: new Date(today.getFullYear(), today.getMonth(), 1)
-    }
-  });
-  
-  return `INV-${year}${month}-${String(count + 1).padStart(4, '0')}`;
+  // Use timestamp + random to ensure uniqueness
+  return `INV-${year}${month}-${timestamp}-${randomSuffix}`;
 };
 
 // Create invoice
@@ -34,8 +29,31 @@ export const createInvoice = async (req, res) => {
     const taxAmount = items.reduce((sum, item) => sum + item.taxAmount, 0);
     const totalAmount = subtotal + taxAmount;
     
-    // Generate invoice number
-    const invoiceNumber = await generateInvoiceNumber(req.user.hotelId, req.body.branchId);
+    // Generate invoice number with retry logic for duplicates
+    let invoiceNumber;
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    do {
+      invoiceNumber = await generateInvoiceNumber(req.user.hotelId, req.body.branchId);
+      attempts++;
+      
+      // Check if this invoice number already exists
+      const existingInvoice = await Invoice.findOne({
+        hotelId: req.user.hotelId,
+        branchId: req.body.branchId,
+        invoiceNumber
+      });
+      
+      if (!existingInvoice) {
+        break; // Found unique invoice number
+      }
+      
+      // If duplicate, try again with a slight delay
+      if (attempts >= maxAttempts) {
+        throw new Error('Unable to generate unique invoice number after multiple attempts');
+      }
+    } while (attempts < maxAttempts);
     
     // Helper function to safely convert to ObjectId
     const toObjectId = (id) => {
@@ -447,7 +465,7 @@ export const getBranchRevenue = async (req, res) => {
       filter.period = period;
     }
     
-    const revenue = await BranchRevenue.findOne(filter);
+    const revenue = await HotelBranchRevenue.findOne(filter);
     
     res.json({
       success: true,

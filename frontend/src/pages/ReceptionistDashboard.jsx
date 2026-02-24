@@ -5,6 +5,7 @@ import { hotelAPI, branchAPI, roomAPI, bookingAPI, guestAPI } from "../services/
 export default function ReceptionistDashboard() {
   const [hotels, setHotels] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [allBranches, setAllBranches] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [guests, setGuests] = useState([]);
@@ -92,9 +93,25 @@ export default function ReceptionistDashboard() {
         const bookingsResponse = await bookingAPI.getBookings();
         setBookings(bookingsResponse.data || bookingsResponse);
         
-        // Fetch all guests
-        const guestsResponse = await guestAPI.getGuests();
-        setGuests(guestsResponse.data || guestsResponse);
+        // Fetch all branches for display
+        const allBranchesResponse = await hotelAPI.getAllBranches();
+        setAllBranches(allBranchesResponse.data || []);
+        
+        // If user has specific hotel, also fetch its branches
+        if (hotelId) {
+          const hotelBranches = allBranchesResponse.data?.filter(branch => 
+            branch.hotel_id && branch.hotel_id._id?.toString() === hotelId
+          ) || [];
+          setBranches(hotelBranches);
+          
+          if (hotelBranches.length > 0) {
+            setSelectedBranch(hotelBranches[0]);
+            
+            // Fetch rooms for this branch
+            const roomsResponse = await roomAPI.getRooms(hotelId, hotelBranches[0]._id);
+            setRooms(roomsResponse.data || []);
+          }
+        }
       }
       
       setLoading(false);
@@ -113,10 +130,20 @@ export default function ReceptionistDashboard() {
       const hotel = hotels.find(h => h._id === hotelId);
       setSelectedHotel(hotel);
       
-      // Fetch branches
-      const branchesResponse = await hotelAPI.getBranches(hotelId);
-      const hotelBranches = branchesResponse.data || [];
+      // Fetch all branches and filter by selected hotel
+      const allBranchesResponse = await hotelAPI.getAllBranches();
+      const allBranchesData = allBranchesResponse.data || [];
+      const hotelBranches = allBranchesData.filter(branch => 
+        branch.hotel_id && branch.hotel_id._id?.toString() === hotelId
+      );
       setBranches(hotelBranches);
+      
+      console.log("DEBUG: Hotel branches found:", {
+        hotelId,
+        totalBranches: allBranchesData.length,
+        hotelBranches: hotelBranches.length,
+        branchCities: hotelBranches.map(b => ({ name: b.name, city: b.city }))
+      });
       
       if (hotelBranches.length > 0) {
         setSelectedBranch(hotelBranches[0]);
@@ -292,15 +319,6 @@ export default function ReceptionistDashboard() {
                 Room Status
               </Link>
               <Link
-                to="/guests"
-                className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              >
-                <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                👥 Guest Management
-              </Link>
-              <Link
                 to="/billing"
                 className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
               >
@@ -356,7 +374,7 @@ export default function ReceptionistDashboard() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex items-center space-x-4">
-                <h2 className="text-xl font-semibold text-gray-900">Reception Dashboard</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Receptionist Mumbai</h2>
                 
                 {/* Hotel Selector */}
                 {hotels.length > 0 && (
@@ -381,7 +399,9 @@ export default function ReceptionistDashboard() {
                   >
                     <option value="">Select Branch</option>
                     {branches.map(branch => (
-                      <option key={branch._id} value={branch._id}>{branch.name}</option>
+                      <option key={branch._id} value={branch._id}>
+                        {branch.name} ({branch.city})
+                      </option>
                     ))}
                   </select>
                 )}
@@ -620,6 +640,129 @@ export default function ReceptionistDashboard() {
                   </div>
                 )}
               </div>
+            {/* All Hotels Section */}
+              <div className="bg-white rounded-lg shadow">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900">All Hotels ({hotels.length})</h3>
+                </div>
+                {hotels.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No hotels found</h3>
+                    <p className="text-gray-500">There are no hotels in the system yet.</p>
+                  </div>
+                ) : (
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {hotels.map((hotel) => (
+                        <div key={hotel._id} className="border border-gray-200 rounded-lg p-5 hover:shadow-lg transition-shadow">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center">
+                              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mr-3">
+                                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-semibold text-gray-900">{hotel.name}</h4>
+                                <p className="text-sm text-gray-500">Hotel ID: {hotel._id}</p>
+                              </div>
+                            </div>
+                            {selectedHotel?._id === hotel._id && (
+                              <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                Current
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              {hotel.address || 'Address not available'}
+                            </div>
+                            
+                            {hotel.email && (
+                              <div className="flex items-center text-sm text-gray-600">
+                                <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                {hotel.email}
+                              </div>
+                            )}
+                            
+                            {hotel.phone && (
+                              <div className="flex items-center text-sm text-gray-600">
+                                <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                {hotel.phone}
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center text-sm text-gray-600">
+                              <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              </svg>
+                              {hotel.branchCount || 0} Branch{hotel.branchCount !== 1 ? 'es' : ''}
+                            </div>
+                            
+                            {/* Show branch cities */}
+                            {(() => {
+                              const hotelBranches = allBranches.filter(b => b.hotel_id?._id?.toString() === hotel._id);
+                              const cities = [...new Set(hotelBranches.map(b => b.city))];
+                              if (cities.length > 0) {
+                                return (
+                                  <div className="flex flex-wrap gap-1">
+                                    {cities.map(city => (
+                                      <span 
+                                        key={city}
+                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                          city === 'Mumbai' 
+                                            ? 'bg-blue-100 text-blue-800' 
+                                            : city === 'Pune'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-gray-100 text-gray-800'
+                                        }`}
+                                      >
+                                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        {city}
+                                      </span>
+                                    ))}
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                          
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <button
+                              onClick={() => handleHotelChange(hotel._id)}
+                              className={`w-full px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                selectedHotel?._id === hotel._id
+                                  ? 'bg-teal-600 text-white'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              {selectedHotel?._id === hotel._id ? 'Selected Hotel' : 'Select This Hotel'}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </main>
@@ -642,6 +785,18 @@ export default function ReceptionistDashboard() {
             </div>
             
             <form onSubmit={handleCreateBooking} className="p-6">
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Booking ID:</label>
+                  <div className="text-lg font-bold text-teal-600">
+                    {showNewBooking ? 'AUTO-GENERATED' : 'N/A'}
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Booking ID will be automatically assigned when you create the booking
+                </div>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Guest Name *</label>
@@ -673,6 +828,23 @@ export default function ReceptionistDashboard() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
                     required
                   />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Room *</label>
+                  <select
+                    value={bookingForm.roomId}
+                    onChange={(e) => setBookingForm({...bookingForm, roomId: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  >
+                    <option value="">Select Room</option>
+                    {availableRooms.map(room => (
+                      <option key={room._id} value={room._id}>
+                        Room {room.roomNumber} - {room.category} (${room.basePrice}/night)
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div>

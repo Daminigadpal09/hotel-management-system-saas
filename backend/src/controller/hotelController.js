@@ -1,5 +1,5 @@
 import Hotel from "../model/hotel.js";
-import Branch from "../model/Branch.js";
+import BranchModel from "../model/BranchModel.js";
 import User from "../model/User.js";
 import bcrypt from "bcryptjs";
 
@@ -207,7 +207,7 @@ export const createBranch = async (req, res) => {
       manager_id: req.user.id // Assign the creator as branch manager
     };
 
-    const branch = await Branch.create(branchData);
+    const branch = await BranchModel.create(branchData);
     
     // Update the user to include the branch_id
     if (req.user.role === "branch_manager") {
@@ -261,7 +261,7 @@ export const getBranches = async (req, res) => {
 
     try {
       const hotel = await Hotel.findById(hotelId);
-      const branches = await Branch.find({ hotel_id: hotelId }).sort({ createdAt: -1 });
+      const branches = await BranchModel.find({ hotel_id: hotelId }).sort({ createdAt: -1 });
 
       // If no hotel or branches found in DB, return mock data
       if (!hotel || branches.length === 0) {

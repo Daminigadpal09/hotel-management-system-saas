@@ -30,13 +30,13 @@ router.get("/users/all", authorize("owner", "super_admin"), getAllUsersForOwner)
 
 // 🏨 Hotel Routes (for hotel owners)
 router.post("/", authorize("owner"), createHotel);
-router.get("/", authorize("owner"), getHotels);
+router.get("/", authorize("owner", "receptionist", "super_admin"), getHotels);
 router.get("/:id", getHotelById); // Accessible by owner and super admin
 router.put("/:id", updateHotel); // Accessible by owner and super admin
 
 // 🏢 Branch Routes
 router.post("/:hotelId/branches", authorize("owner", "branch_manager"), createBranch);
-router.get("/:hotelId/branches", authorize("owner", "branch_manager", "super_admin"), getBranches);
+router.get("/:hotelId/branches", authorize("owner", "branch_manager", "receptionist", "super_admin"), getBranches);
 
 // 👥 User Management Routes
 router.post("/:hotelId/users", authorize("owner", "super_admin"), createUser);

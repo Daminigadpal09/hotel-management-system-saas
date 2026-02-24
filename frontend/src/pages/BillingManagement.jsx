@@ -30,6 +30,7 @@ export default function BillingManagement() {
     amount: 0,
     paymentMethod: 'cash',
     paymentType: 'full',
+    branchId: '',
     notes: ''
   });
 
@@ -185,6 +186,7 @@ export default function BillingManagement() {
         amount: 0,
         paymentMethod: 'cash',
         paymentType: 'full',
+        branchId: '',
         notes: ''
       });
       fetchPayments();
@@ -583,6 +585,18 @@ export default function BillingManagement() {
               </div>
               
               <form onSubmit={handleCreateInvoice} className="px-6 py-4">
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Booking ID:</label>
+                    <div className="text-lg font-bold text-indigo-600">
+                      {showCreateInvoice ? 'AUTO-GENERATED' : 'N/A'}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Booking ID will be automatically assigned when you create invoice
+                  </div>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Booking ID</label>
@@ -753,6 +767,23 @@ export default function BillingManagement() {
                       {invoices.map((invoice) => (
                         <option key={invoice._id} value={invoice._id}>
                           {invoice.invoiceNumber} - ${invoice.totalAmount?.toFixed(2)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
+                    <select
+                      value={paymentForm.branchId}
+                      onChange={(e) => setPaymentForm({ ...paymentForm, branchId: e.target.value })}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    >
+                      <option value="">Select Branch</option>
+                      {branches.map((branch) => (
+                        <option key={branch._id} value={branch._id}>
+                          {branch.name} - {branch.city}
                         </option>
                       ))}
                     </select>

@@ -48,7 +48,7 @@ router.get(
 router.put(
   "/:id",
   protect,
-  authorize("owner", "branch_manager"),
+  authorize("owner", "branch_manager", "receptionist"),
   updateBooking
 );
 

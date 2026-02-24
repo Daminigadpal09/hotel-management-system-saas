@@ -2,24 +2,32 @@
 import express from "express";
 import {
   createBranch,
-  getBranches
+  getBranches,
+  getAllBranches
 } from "../controller/branchController.js";
 
-import { verifyToken, authorizeRoles } from "../middleware/auth.middleware.js";
+import { protect, authorize } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
+// All routes require authentication
+router.use(protect);
+
 router.post(
   "/",
-  verifyToken,
-  authorizeRoles("OWNER"),
+  authorize("OWNER"),
   createBranch
 );
 
 router.get(
+  "/all",
+  authorize("OWNER", "RECEPTIONIST", "SUPER_ADMIN"),
+  getAllBranches
+);
+
+router.get(
   "/",
-  verifyToken,
-  authorizeRoles("OWNER", "BRANCH_MANAGER"),
+  authorize("OWNER", "BRANCH_MANAGER"),
   getBranches
 );
 

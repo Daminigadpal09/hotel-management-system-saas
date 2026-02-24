@@ -1,6 +1,6 @@
 import Hotel from "../model/hotel.js";
 import User from "../model/User.js";
-import Branch from "../model/Branch.js";
+import BranchModel from "../model/BranchModel.js";
 
 // 📊 Get Platform Analytics
 export const getPlatformAnalytics = async (req, res) => {

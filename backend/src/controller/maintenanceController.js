@@ -1,5 +1,5 @@
 import Room from "../model/Room.js";
-import Branch from "../model/Branch.js";
+import BranchModel from "../model/BranchModel.js";
 import Hotel from "../model/hotel.js";
 
 // 🧹 Get Cleaning Schedule

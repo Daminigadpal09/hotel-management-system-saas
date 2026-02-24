@@ -749,8 +749,11 @@ export default function RoomManagementEnhanced() {
                     </label>
                     <input
                       type="text"
-                      value={roomForm.amenities.join(', ')}
-                      onChange={(e) => setRoomForm({...roomForm, amenities: e.target.value.split(', ').map(a => a.trim())})}
+                      value={roomForm.amenities.map(a => a.name).join(', ')}
+                      onChange={(e) => setRoomForm({
+                        ...roomForm, 
+                        amenities: e.target.value.split(', ').map(a => ({ name: a.trim(), included: true }))
+                      })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="TV, WiFi, AC, etc."
                     />

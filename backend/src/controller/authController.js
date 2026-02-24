@@ -1,6 +1,7 @@
 import User from "../model/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
 // 🔐 Generate JWT
@@ -22,7 +23,7 @@ const generateToken = (user) => {
 // ✅ REGISTER USER
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role, hotel_id, branch_id } = req.body;
+    const { name, email, password, role, hotel_id, branch_id, branch } = req.body;
 
     // 🔍 Check if email already exists
     const existingUser = await User.findOne({ email });
@@ -34,14 +35,36 @@ export const registerUser = async (req, res) => {
       });
     }
 
+    // Handle branch assignment for receptionists
+    let finalBranchId = branch_id;
+    let finalHotelId = hotel_id;
+
+    // If role is receptionist and branch is provided, find the corresponding branch
+    if (role === "receptionist" && branch) {
+      // Find branch by name (mumbai or pune)
+      const branchDoc = await mongoose.connection.db.collection('branches').findOne({
+        name: { $regex: new RegExp(branch, 'i') }
+      });
+      
+      if (branchDoc) {
+        finalBranchId = branchDoc._id;
+        finalHotelId = branchDoc.hotelId;
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid branch selected"
+        });
+      }
+    }
+
     // ✅ Create user (password will be hashed automatically by pre-save hook)
     const user = await User.create({
       name,
       email,
       password, // Plain password - model will hash it
       role,
-      ...(hotel_id && { hotel_id }),
-      ...(branch_id && { branch_id })
+      ...(finalHotelId && { hotel_id: finalHotelId }),
+      ...(finalBranchId && { branch_id: finalBranchId })
     });
 
     // 🔐 Generate token

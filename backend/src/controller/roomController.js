@@ -1,5 +1,5 @@
 import Room from "../model/Room.js";
-import Branch from "../model/Branch.js";
+import BranchModel from "../model/BranchModel.js";
 import Hotel from "../model/hotel.js";
 
 // 🛏️ Create Room
@@ -8,7 +8,7 @@ export const createRoom = async (req, res) => {
     const { hotelId, branchId } = req.params;
     
     // Check if branch exists and user has access
-    const branch = await Branch.findById(branchId);
+    const branch = await BranchModel.findById(branchId);
     if (!branch) {
       return res.status(404).json({
         success: false,
@@ -50,7 +50,13 @@ export const createRoom = async (req, res) => {
     const roomData = {
       ...req.body,
       hotel_id: hotelId,
-      branch_id: branchId
+      branch_id: branchId,
+      // Ensure amenities has proper default structure
+      amenities: req.body.amenities || [
+        { name: "WiFi", included: true },
+        { name: "Air Conditioning", included: true },
+        { name: "TV", included: true }
+      ]
     };
 
     const room = await Room.create(roomData);

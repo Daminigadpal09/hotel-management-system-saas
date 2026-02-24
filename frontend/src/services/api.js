@@ -110,6 +110,8 @@ export const hotelAPI = {
   
   getHotelRooms: (hotelId, branchId) => roomAPI.getRooms(hotelId, branchId),
   
+  getAllBranches: () => apiRequest("/branches/all"),
+  
   createHotel: (hotelData) => apiRequest("/hotels", {
     method: "POST",
     body: JSON.stringify(hotelData)

@@ -272,15 +272,6 @@ export default function GuestManagement() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-            <select
-              value={filterBlacklisted}
-              onChange={(e) => setFilterBlacklisted(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="all">All Guests</option>
-              <option value="false">Not Blacklisted</option>
-              <option value="true">Blacklisted</option>
-            </select>
           </div>
         </div>
       </div>
