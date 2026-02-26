@@ -218,7 +218,7 @@ export const maintenanceAPI = {
 
 // Booking API calls
 export const bookingAPI = {
-  getBookings: () => apiRequest('/bookings'),
+  getBookings: (page = 1, limit = 10) => apiRequest(`/bookings?page=${page}&limit=${limit}`),
   
   createBooking: (bookingData) => apiRequest('/bookings', {
     method: "POST",
@@ -249,13 +249,15 @@ export const bookingAPI = {
   }),
   
   getBookingHistory: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
+    const params = new URLSearchParams({ ...filters }).toString();
     return apiRequest(`/bookings/history${params ? '?' + params : ''}`);
   },
   
-  getBookingsByHotel: (hotelId) => apiRequest(`/bookings?hotelId=${hotelId}`),
+  getBookingsByHotel: (hotelId, page = 1, limit = 10) => apiRequest(`/bookings?hotelId=${hotelId}&page=${page}&limit=${limit}`),
   
-  getBookingsByBranch: (branchId) => apiRequest(`/bookings?branchId=${branchId}`)
+  getBookingsByBranch: (branchId, page = 1, limit = 10) => apiRequest(`/bookings?branchId=${branchId}&page=${page}&limit=${limit}`),
+  
+  getAllBookingsPaginated: (page = 1, limit = 10) => apiRequest(`/bookings/debug/all?page=${page}&limit=${limit}`)
 };
 
 // User Management API calls

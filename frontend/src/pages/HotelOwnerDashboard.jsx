@@ -6,37 +6,25 @@ export default function HotelOwnerDashboard() {
   const [hotels, setHotels] = useState([]);
   const [hotelsWithRooms, setHotelsWithRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
-  const [showAddHotel, setShowAddHotel] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
-  // User management state
-  const [showUserManagement, setShowUserManagement] = useState(false);
-  const [selectedHotelId, setSelectedHotelId] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [showAddUser, setShowAddUser] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  // Room Management state
+  const [showRoomManagement, setShowRoomManagement] = useState(false);
+  const [rooms, setRooms] = useState([]);
+  const [showAddRoom, setShowAddRoom] = useState(false);
+  const [roomForm, setRoomForm] = useState({
+    roomNumber: "",
+    category: "standard",
+    type: "single",
+    floor: 1,
+    basePrice: 1000,
+    capacity: 2,
+    bedCount: 1,
+    description: ""
+  });
   const [branches, setBranches] = useState([]);
-  const [showAllUsers, setShowAllUsers] = useState(false);
-  
-  const [hotelForm, setHotelForm] = useState({
-    name: "",
-    description: "",
-    email: "",
-    phone: "",
-    address: "",
-    gstNumber: ""
-  });
-
-  const [userForm, setUserForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "branch_manager",
-    hotel_id: "",
-    branch_id: "",
-    status: "active"
-  });
+  const [selectedBranch, setSelectedBranch] = useState(null);
 
   const fetchHotels = async () => {
     try {
@@ -94,217 +82,84 @@ export default function HotelOwnerDashboard() {
     fetchBookings();
   }, []);
 
-  const handleCreateHotel = async (e) => {
-    e.preventDefault();
+  // Room Management functions
+  const fetchBranches = async (hotelId) => {
     try {
-      await hotelAPI.createHotel(hotelForm);
-      alert("Hotel created successfully!");
-      setShowAddHotel(false);
-      setHotelForm({
-        name: "",
-        description: "",
-        email: "",
-        phone: "",
-        address: "",
-        gstNumber: ""
-      });
-      fetchHotels();
-      fetchBookings(); // Refresh bookings as well
-    } catch (error) {
-      alert("Error creating hotel: " + error.message);
-    }
-  };
-
-  const handleOpenUserManagement = async (hotelId, showAll = false) => {
-    console.log("handleOpenUserManagement called with:", { hotelId, showAll });
-    setSelectedHotelId(hotelId);
-    setShowAllUsers(showAll);
-    setShowUserManagement(true);
-    setShowAddUser(false);
-    setEditingUser(null);
-    
-    if (showAll) {
-      console.log("Calling fetchAllUsers...");
-      await fetchAllUsers();
-    } else if (hotelId) {
-      console.log("Calling fetchUsers for hotel:", hotelId);
-      await fetchUsers(hotelId);
-    }
-    
-    // Fetch branches for hotel
-    if (hotelId && !showAll) {
-      try {
-        const branchesResponse = await hotelAPI.getBranches(hotelId);
-        setBranches(branchesResponse.data || []);
-      } catch (error) {
-        console.error("Error fetching branches:", error);
-        setBranches([]);
-      }
-    } else {
-      setBranches([]);
-    }
-  };
-
-  const fetchUsers = async (hotelId) => {
-    try {
-      const data = await userAPI.getUsers(hotelId);
-      setUsers(data.data || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      setUsers([]);
-    }
-  };
-
-  const fetchAllUsers = async () => {
-    try {
-      console.log("fetchAllUsers called - fetching all users from database");
-      // Fetch all users from database using the getAllUsers endpoint
-      const data = await userAPI.getAllUsers();
-      console.log("Got all users data:", data);
-      
-      if (data && data.data) {
-        // Users already have hotel_id populated from backend
-        setUsers(data.data);
-        console.log("Setting users:", data.data.length);
-      } else {
-        setUsers([]);
-        console.log("No users found in database");
+      const data = await branchAPI.getBranches(hotelId);
+      setBranches(data.data || []);
+      if (data.data && data.data.length > 0) {
+        setSelectedBranch(data.data[0]._id);
       }
     } catch (error) {
-      console.error("Error fetching all users:", error);
-      setUsers([]);
+      console.error("Error fetching branches:", error);
     }
   };
 
-  const handleCreateUser = async (e) => {
-    e.preventDefault();
+  const fetchRooms = async () => {
+    if (!selectedBranch) return;
     
     try {
-      const userData = {
-        name: userForm.name,
-        email: userForm.email,
-        password: userForm.password,
-        role: userForm.role,
-        branch_id: userForm.branch_id || null,
-        status: userForm.status
-      };
+      setLoading(true);
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const hotelId = hotels[0]?._id || user.hotel_id;
       
-      const hotelId = showAllUsers ? userForm.hotel_id : selectedHotelId;
       if (!hotelId) {
-        alert("Hotel ID is required");
+        setRooms([]);
         return;
       }
       
-      const data = await userAPI.createUser(hotelId, userData);
-      
-      if (data) {
-        alert("User created successfully!");
-        setShowAddUser(false);
-        setUserForm({
-          name: "",
-          email: "",
-          password: "",
-          role: "branch_manager",
-          hotel_id: "",
-          branch_id: "",
-          status: "active"
-        });
-        
-        if (showAllUsers) {
-          await fetchAllUsers();
-        } else {
-          fetchUsers(selectedHotelId);
-        }
-      }
+      const data = await roomAPI.getRooms(hotelId, selectedBranch);
+      setRooms(data.data || []);
     } catch (error) {
-      alert("Error: " + error.message);
+      console.error("Error fetching rooms:", error);
+      setRooms([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpdateUser = async (e) => {
+  const handleCreateRoom = async (e) => {
     e.preventDefault();
     
-    try {
-      const userData = {
-        name: userForm.name,
-        email: userForm.email,
-        role: userForm.role,
-        branch_id: userForm.branch_id || null,
-        status: userForm.status
-      };
-      
-      // Use the user's hotel_id if available, otherwise use selectedHotelId
-      const hotelId = editingUser.hotel_id?._id || selectedHotelId;
-      if (!hotelId) {
-        alert("Hotel ID not found for user");
-        return;
-      }
-      
-      const data = await userAPI.updateUser(hotelId, editingUser._id, userData);
-      
-      if (data) {
-        alert("User updated successfully!");
-        setEditingUser(null);
-        setUserForm({
-          name: "",
-          email: "",
-          password: "",
-          role: "branch_manager",
-          hotel_id: "",
-          branch_id: "",
-          status: "active"
-        });
-        
-        if (showAllUsers) {
-          await fetchAllUsers();
-        } else {
-          fetchUsers(selectedHotelId);
-        }
-      }
-    } catch (error) {
-      alert("Error: " + error.message);
-    }
-  };
-
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) {
+    if (!roomForm.roomNumber || !roomForm.type || !roomForm.basePrice) {
+      alert("Please fill all required fields");
       return;
     }
     
     try {
-      // Find the user to get their hotel_id
-      const userToDelete = users.find(u => u._id === userId);
-      const hotelId = userToDelete?.hotel_id?._id || selectedHotelId;
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const hotelId = hotels[0]?._id || user.hotel_id;
       
-      if (!hotelId) {
-        alert("Hotel ID not found for user");
+      if (!hotelId || !selectedBranch) {
+        alert("Please select both hotel and branch");
         return;
       }
       
-      await userAPI.deleteUser(hotelId, userId);
-      alert("User deleted successfully!");
+      const roomData = {
+        ...roomForm,
+        basePrice: parseFloat(roomForm.basePrice),
+        capacity: parseInt(roomForm.capacity),
+        floor: parseInt(roomForm.floor),
+        bedCount: parseInt(roomForm.bedCount)
+      };
       
-      if (showAllUsers) {
-        await fetchAllUsers();
-      } else {
-        fetchUsers(selectedHotelId);
-      }
+      await roomAPI.createRoom(hotelId, selectedBranch, roomData);
+      alert("Room created successfully!");
+      setShowAddRoom(false);
+      setRoomForm({
+        roomNumber: "",
+        category: "standard",
+        type: "single",
+        floor: 1,
+        basePrice: 1000,
+        capacity: 2,
+        bedCount: 1,
+        description: ""
+      });
+      fetchRooms();
     } catch (error) {
-      alert("Error: " + error.message);
+      alert("Error creating room: " + error.message);
     }
-  };
-
-  const handleEditUser = (user) => {
-    setEditingUser(user);
-    setUserForm({
-      name: user.name,
-      email: user.email,
-      password: "",
-      role: user.role,
-      hotel_id: user.hotel_id?._id || "",
-      branch_id: user.branch_id?._id || "",
-      status: user.status || "active"
-    });
   };
 
   const handleLogout = () => {
@@ -334,7 +189,7 @@ export default function HotelOwnerDashboard() {
               <span className="text-white font-bold text-lg">H</span>
             </div>
             <div className="ml-3">
-              <h1 className="text-xl font-semibold text-gray-900">Receptionist Mumbai</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Hotel Owner Dashboard</h1>
               <p className="text-sm text-gray-500">{user.name}</p>
             </div>
           </div>
@@ -366,7 +221,19 @@ export default function HotelOwnerDashboard() {
                 My Hotels
               </Link>
               <Link
-                to="/room-management"
+                to="/owner-dashboard"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowRoomManagement(!showRoomManagement);
+                  if (!showRoomManagement) {
+                    // Initialize room management when opening
+                    const user = JSON.parse(localStorage.getItem("user") || "{}");
+                    const hotelId = hotels[0]?._id || user.hotel_id;
+                    if (hotelId) {
+                      fetchBranches(hotelId);
+                    }
+                  }
+                }}
                 className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
               >
                 <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,32 +264,14 @@ export default function HotelOwnerDashboard() {
                 className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
               >
                 <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 4.077a1 1 0 01-1.123.606l-2.257-4.077a1 1 0 01-.502-1.21L7.228 3.684A1 1 0 018.172 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002 2V5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 4.077a1 1 0 01-1.123.606l-2.257-4.077a1 1 0 01-.502-1.21L7.228 3.684A1 1 0 018.172 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5z" />
                 </svg>
                 💰 Billing & Payments
               </Link>
-              <button
-                onClick={() => handleOpenUserManagement(null, true)}
-                className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              >
-                <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                Manage Users
-              </button>
             </div>
 
             <div className="mb-6">
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Quick Actions</h3>
-              <button
-                onClick={() => setShowAddHotel(!showAddHotel)}
-                className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              >
-                <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add New Hotel
-              </button>
             </div>
 
             <div className="mb-6">
@@ -516,12 +365,6 @@ export default function HotelOwnerDashboard() {
                 <div className="px-6 py-4 border-b border-gray-200">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium text-gray-900">My Hotels</h3>
-                    <button
-                      onClick={() => setShowAddHotel(!showAddHotel)}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
-                    >
-                      + Add Hotel
-                    </button>
                   </div>
                 </div>
 
@@ -533,13 +376,7 @@ export default function HotelOwnerDashboard() {
                       </svg>
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No hotels registered yet</h3>
-                    <p className="text-gray-500 mb-4">Get started by adding your first hotel to manage your properties.</p>
-                    <button
-                      onClick={() => setShowAddHotel(true)}
-                      className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
-                    >
-                      Add Your First Hotel
-                    </button>
+                    <p className="text-gray-500">Contact administrator to add hotels to your account.</p>
                   </div>
                 ) : (
                   <div className="overflow-hidden">
@@ -636,15 +473,6 @@ export default function HotelOwnerDashboard() {
                               📅 Bookings
                             </button>
                             <button
-                              onClick={() => hotel?._id && handleOpenUserManagement(hotel._id)}
-                              className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-purple-700 bg-purple-50 hover:bg-purple-100"
-                            >
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                              </svg>
-                              Users
-                            </button>
-                            <button
                               onClick={() => navigate(`/guests/${hotel._id}`)}
                               className="inline-flex items-center px-3 py-1.5 border border-green-300 shadow-sm text-xs font-medium rounded text-green-700 bg-green-50 hover:bg-green-100"
                             >
@@ -670,6 +498,287 @@ export default function HotelOwnerDashboard() {
                 )}
               </div>
             </div>
+
+            {/* Room Management Section */}
+            {showRoomManagement && (
+              <div className="bg-white rounded-lg shadow mt-8">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium text-gray-900">Room Management</h3>
+                    <button
+                      onClick={() => setShowRoomManagement(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Room Actions */}
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-md font-medium text-gray-900">Rooms</h4>
+                    <button
+                      onClick={() => setShowAddRoom(!showAddRoom)}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
+                    >
+                      Add New Room
+                    </button>
+                  </div>
+
+                  {/* Branch Selector */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Branch</label>
+                    <select
+                      value={selectedBranch || ""}
+                      onChange={(e) => {
+                        setSelectedBranch(e.target.value);
+                        fetchRooms();
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="">Select a branch...</option>
+                      {branches.map((branch) => (
+                        <option key={branch._id} value={branch._id}>
+                          {branch.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filters */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="">All Categories</option>
+                        <option value="standard">Standard</option>
+                        <option value="deluxe">Deluxe</option>
+                        <option value="suite">Suite</option>
+                        <option value="executive">Executive</option>
+                        <option value="presidential">Presidential</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Room Type</label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="">All Types</option>
+                        <option value="single">Single</option>
+                        <option value="double">Double</option>
+                        <option value="twin">Twin</option>
+                        <option value="family">Family</option>
+                        <option value="dormitory">Dormitory</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="">All Status</option>
+                        <option value="available">Available</option>
+                        <option value="occupied">Occupied</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="cleaning">Cleaning</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Add Room Modal */}
+                {showAddRoom && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                      <div className="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 className="text-lg font-medium text-gray-900">Add New Room</h3>
+                        <button
+                          onClick={() => setShowAddRoom(false)}
+                          className="text-gray-400 hover:text-gray-500"
+                        >
+                          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <form onSubmit={handleCreateRoom} className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Room Number *</label>
+                            <input
+                              type="text"
+                              value={roomForm.roomNumber}
+                              onChange={(e) => setRoomForm({...roomForm, roomNumber: e.target.value})}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                            <select
+                              value={roomForm.category}
+                              onChange={(e) => setRoomForm({...roomForm, category: e.target.value})}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              required
+                            >
+                              <option value="standard">Standard</option>
+                              <option value="deluxe">Deluxe</option>
+                              <option value="suite">Suite</option>
+                              <option value="executive">Executive</option>
+                              <option value="presidential">Presidential</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Room Type *</label>
+                            <select
+                              value={roomForm.type}
+                              onChange={(e) => setRoomForm({...roomForm, type: e.target.value})}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              required
+                            >
+                              <option value="single">Single</option>
+                              <option value="double">Double</option>
+                              <option value="twin">Twin</option>
+                              <option value="family">Family</option>
+                              <option value="dormitory">Dormitory</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Floor *</label>
+                            <input
+                              type="number"
+                              value={roomForm.floor}
+                              onChange={(e) => setRoomForm({...roomForm, floor: e.target.value})}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Base Price *</label>
+                            <input
+                              type="number"
+                              value={roomForm.basePrice}
+                              onChange={(e) => setRoomForm({...roomForm, basePrice: e.target.value})}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Capacity *</label>
+                            <input
+                              type="number"
+                              value={roomForm.capacity}
+                              onChange={(e) => setRoomForm({...roomForm, capacity: e.target.value})}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Bed Count *</label>
+                            <input
+                              type="number"
+                              value={roomForm.bedCount}
+                              onChange={(e) => setRoomForm({...roomForm, bedCount: e.target.value})}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              required
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea
+                              value={roomForm.description}
+                              onChange={(e) => setRoomForm({...roomForm, description: e.target.value})}
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end space-x-3 mt-6">
+                          <button
+                            type="button"
+                            onClick={() => setShowAddRoom(false)}
+                            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
+                          >
+                            Create Room
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rooms List */}
+                <div className="p-6">
+                  {loading ? (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500">Loading rooms...</div>
+                    </div>
+                  ) : rooms.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No rooms found</h3>
+                      <p className="text-gray-500">Add your first room to get started.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {rooms.map((room) => (
+                        <div key={room._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="text-md font-medium text-gray-900">{room.roomNumber}</h4>
+                              <p className="text-sm text-gray-500">{room.category} • {room.type}</p>
+                            </div>
+                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              room.status === 'available' ? 'bg-green-100 text-green-800' :
+                              room.status === 'occupied' ? 'bg-red-100 text-red-800' :
+                              room.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {room.status}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-500">Floor:</span>
+                              <span className="font-medium">{room.floor}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-500">Capacity:</span>
+                              <span className="font-medium">{room.capacity} guests</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-500">Price:</span>
+                              <span className="font-medium">${room.basePrice}/night</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-500">Beds:</span>
+                              <span className="font-medium">{room.bedCount}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Recent Bookings Section */}
             <div className="bg-white rounded-lg shadow mt-8">
@@ -701,48 +810,50 @@ export default function HotelOwnerDashboard() {
                   </Link>
                 </div>
               ) : (
-                <div className="overflow-hidden">
-                  <div className="grid grid-cols-1 gap-4 p-6">
-                    {bookings.slice(0, 5).map((booking) => (
-                      <div key={booking._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-shrink-0">
-                                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                  </svg>
+                <>
+                  <div className="overflow-hidden">
+                    <div className="grid grid-cols-1 gap-4 p-6">
+                      {bookings.slice(0, 5).map((booking) => (
+                        <div key={booking._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex-shrink-0">
+                                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-900">{booking.guestName}</h4>
+                                  <p className="text-sm text-gray-500">
+                                    Room {booking.roomId?.roomNumber || booking.roomId} • {booking.roomId?.category || 'N/A'}
+                                  </p>
                                 </div>
                               </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-gray-900">{booking.guestName}</h4>
-                                <p className="text-sm text-gray-500">
-                                  Room {booking.roomId?.roomNumber || booking.roomId} • {booking.roomId?.category || 'N/A'}
-                                </p>
+                              <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+                                <span>Check-in: {new Date(booking.checkIn).toLocaleDateString()}</span>
+                                <span>Check-out: {new Date(booking.checkOut).toLocaleDateString()}</span>
                               </div>
                             </div>
-                            <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-                              <span>Check-in: {new Date(booking.checkIn).toLocaleDateString()}</span>
-                              <span>Check-out: {new Date(booking.checkOut).toLocaleDateString()}</span>
+                            <div className="flex flex-col items-end space-y-2">
+                              <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                booking.status === 'BOOKED' ? 'bg-blue-100 text-blue-800' :
+                                booking.status === 'CHECKED_IN' ? 'bg-green-100 text-green-800' :
+                                booking.status === 'CHECKED_OUT' ? 'bg-gray-100 text-gray-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {booking.status}
+                              </span>
+                              <span className="text-sm font-medium text-gray-900">
+                                ${booking.totalAmount || 0}
+                              </span>
                             </div>
                           </div>
-                          <div className="flex flex-col items-end space-y-2">
-                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              booking.status === 'BOOKED' ? 'bg-blue-100 text-blue-800' :
-                              booking.status === 'CHECKED_IN' ? 'bg-green-100 text-green-800' :
-                              booking.status === 'CHECKED_OUT' ? 'bg-gray-100 text-gray-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {booking.status}
-                            </span>
-                            <span className="text-sm font-medium text-gray-900">
-                              ${booking.totalAmount || 0}
-                            </span>
-                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                   {bookings.length > 5 && (
                     <div className="px-6 py-4 border-t border-gray-200">
@@ -754,347 +865,12 @@ export default function HotelOwnerDashboard() {
                       </Link>
                     </div>
                   )}
-                </div>
+                </>
               )}
             </div>
           </div>
         </main>
       </div>
-
-      {/* Add Hotel Modal */}
-      {showAddHotel && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Add New Hotel</h3>
-              <button
-                onClick={() => setShowAddHotel(false)}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <form onSubmit={handleCreateHotel} className="p-6">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Name</label>
-                  <input
-                    type="text"
-                    value={hotelForm.name}
-                    onChange={(e) => setHotelForm({...hotelForm, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    value={hotelForm.description}
-                    onChange={(e) => setHotelForm({...hotelForm, description: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    rows={3}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={hotelForm.email}
-                    onChange={(e) => setHotelForm({...hotelForm, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                  <input
-                    type="text"
-                    value={hotelForm.phone}
-                    onChange={(e) => setHotelForm({...hotelForm, phone: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                  <input
-                    type="text"
-                    value={hotelForm.address}
-                    onChange={(e) => setHotelForm({...hotelForm, address: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
-                  <input
-                    type="text"
-                    value={hotelForm.gstNumber}
-                    onChange={(e) => setHotelForm({...hotelForm, gstNumber: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-               
-              <div className="mt-6 flex gap-3">
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
-                >
-                  Create Hotel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddHotel(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* User Management Modal */}
-      {showUserManagement && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
-            <div className="px-6 py-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">User Management</h3>
-              <button
-                onClick={() => {
-                  setShowUserManagement(false);
-                  setSelectedHotelId(null);
-                  setShowAddUser(false);
-                  setEditingUser(null);
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-             
-            <div className="p-6 overflow-y-auto max-h-[70vh]">
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-sm text-gray-600">
-                  {showAllUsers ? "Manage all users in the system" : "Manage staff members for this hotel"}
-                </p>
-                <span className="text-xs text-gray-500">
-                  (Total: {users.length} users)
-                </span>
-                <button
-                  onClick={() => {
-                    setShowAddUser(true);
-                    setEditingUser(null);
-                    setUserForm({
-                      name: "",
-                      email: "",
-                      password: "",
-                      role: "branch_manager",
-                      hotel_id: "",
-                      branch_id: "",
-                      status: "active"
-                    });
-                  }}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
-                >
-                  + Add User
-                </button>
-              </div>
-
-              {/* Add/Edit User Form */}
-              {(showAddUser || editingUser) && (
-                <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">
-                    {editingUser ? "Edit User" : "Add New User"}
-                  </h4>
-                  <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                        <input
-                          type="text"
-                          value={userForm.name}
-                          onChange={(e) => setUserForm({...userForm, name: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input
-                          type="email"
-                          value={userForm.email}
-                          onChange={(e) => setUserForm({...userForm, email: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          required
-                        />
-                      </div>
-                      {!editingUser && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                          <input
-                            type="password"
-                            value={userForm.password}
-                            onChange={(e) => setUserForm({...userForm, password: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            required={!editingUser}
-                          />
-                        </div>
-                      )}
-                      {showAllUsers && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Hotel *</label>
-                          <select
-                            value={userForm.hotel_id || ""}
-                            onChange={(e) => setUserForm({...userForm, hotel_id: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            required
-                          >
-                            <option value="">Select Hotel</option>
-                            {hotels.map(hotel => (
-                              <option key={hotel._id} value={hotel._id}>{hotel.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                        <select
-                          value={userForm.role}
-                          onChange={(e) => setUserForm({...userForm, role: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="branch_manager">Branch Manager</option>
-                          <option value="receptionist">Receptionist</option>
-                          <option value="housekeeping">Housekeeping</option>
-                          <option value="accountant">Accountant</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Branch (Optional)</label>
-                        <select
-                          value={userForm.branch_id}
-                          onChange={(e) => setUserForm({...userForm, branch_id: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="">No Branch</option>
-                          {branches.map(branch => (
-                            <option key={branch._id} value={branch._id}>{branch.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      {editingUser && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                          <select
-                            value={userForm.status}
-                            onChange={(e) => setUserForm({...userForm, status: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          >
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-4 flex gap-2">
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
-                      >
-                        {editingUser ? "Update User" : "Create User"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAddUser(false);
-                          setEditingUser(null);
-                        }}
-                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {/* Users List */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                      {showAllUsers && (
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hotel</th>
-                      )}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {users.length === 0 ? (
-                      <tr>
-                        <td colSpan={showAllUsers ? 7 : 6} className="px-6 py-4 text-center text-sm text-gray-500">
-                          No users found. Add your first user to get started.
-                        </td>
-                      </tr>
-                    ) : (
-                      users.map((user) => (
-                        <tr key={user._id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{user.role?.replace('_', ' ')}</td>
-                          {showAllUsers && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.hotel_id?.name || '-'}</td>
-                          )}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.branch_id?.name || '-'}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {user.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button
-                              onClick={() => handleEditUser(user)}
-                              className="text-indigo-600 hover:text-indigo-900 mr-3"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(user._id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

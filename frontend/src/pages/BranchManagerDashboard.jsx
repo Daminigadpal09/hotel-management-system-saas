@@ -10,11 +10,13 @@ export default function BranchManagerDashboard() {
   const [branches, setBranches] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [bookingPagination, setBookingPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [todayRevenue, setTodayRevenue] = useState(0);
   const [todayBookings, setTodayBookings] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showAllRooms, setShowAllRooms] = useState(false);
+  const [showAddRoomForm, setShowAddRoomForm] = useState(false);
   const [activeSection, setActiveSection] = useState('rooms');
   const [bookingForm, setBookingForm] = useState({
     roomId: '',
@@ -25,7 +27,18 @@ export default function BranchManagerDashboard() {
     checkOut: '',
     adults: 1,
     children: 0,
-    notes: ''
+    notes: '',
+    totalAmount: ''
+  });
+  const [roomForm, setRoomForm] = useState({
+    roomNumber: '',
+    type: 'single',
+    category: 'standard',
+    basePrice: 100,
+    floor: 1,
+    bedCount: 1,
+    capacity: 2,
+    status: 'available'
   });
   const [allAvailableRooms, setAllAvailableRooms] = useState([]);
 
@@ -55,12 +68,47 @@ export default function BranchManagerDashboard() {
 
       const branchesResponse = await branchAPI.getBranches();
       const allBranches = branchesResponse.data || [];
-      setBranches(allBranches);
+      // Only keep Mumbai Branch and Pune Branch
+      const filteredBranches = allBranches.filter(branch => 
+        branch.name === 'Mumbai Branch' || branch.name === 'Pune Branch'
+      );
+      setBranches(filteredBranches);
+      
+      // Fetch all bookings directly (tenant filtering is bypassed in backend)
+      console.log('Fetching all bookings directly...');
+      const bookingsResponse = await bookingAPI.getBookings(1, 20);
+      console.log('Initial bookings API response:', bookingsResponse);
+      let bookings = bookingsResponse.data || [];
+      console.log('Initial bookings loaded:', bookings);
+      setBookings(bookings);
+      
+      // Debug pagination data
+      console.log('=== PAGINATION DEBUG ===');
+      console.log('Response pagination:', bookingsResponse.pagination);
+      console.log('Current pagination state:', bookingPagination);
+      if (bookingsResponse.pagination) {
+        setBookingPagination(bookingsResponse.pagination);
+        console.log('Pagination set:', bookingsResponse.pagination);
+      } else {
+        console.log('No pagination data in response');
+      }
+      console.log('=== END PAGINATION DEBUG ===');
+      
+      console.log('Initial bookings state set:', bookings);
+      
+      // Debug room data
+      console.log('=== ROOM DATA DEBUG ===');
+      console.log('allAvailableRooms length:', allAvailableRooms.length);
+      console.log('allAvailableRooms data:', allAvailableRooms);
+      if (allAvailableRooms.length > 0) {
+        console.log('First room structure:', allAvailableRooms[0]);
+        console.log('Room statuses:', allAvailableRooms.map(r => r.status));
+      }
+      console.log('=== END ROOM DEBUG ===');
       
       if (allBranches.length === 0) {
         const mockBranches = [
-          { _id: 'mumbai1', name: 'Main Branch', city: 'Mumbai', address: '123 Main St, Mumbai' },
-          { _id: 'mumbai2', name: 'Mumbai Branch', city: 'Mumbai', address: '456 Park Ave, Mumbai' },
+          { _id: 'mumbai1', name: 'Mumbai Branch', city: 'Mumbai', address: '456 Park Ave, Mumbai' },
           { _id: 'pune1', name: 'Pune Branch', city: 'Pune', address: '789 Market St, Pune' }
         ];
         setBranches(mockBranches);
@@ -68,13 +116,18 @@ export default function BranchManagerDashboard() {
 
       try {
         const allRoomsResponse = await roomAPI.getAllRooms();
-        setAllAvailableRooms(allRoomsResponse.data || []);
+        const rooms = allRoomsResponse.data || [];
+        console.log('All rooms from API:', rooms);
+        console.log('Sample room data:', rooms[0]);
+        setAllAvailableRooms(rooms);
       } catch (error) {
+        console.log('Room API failed, using mock rooms');
         const mockRooms = [
           { _id: '507f1f77bcf86cd799439011', roomNumber: '101', type: 'single', price: 100, status: 'available' },
           { _id: '507f1f77bcf86cd799439012', roomNumber: '102', type: 'double', price: 150, status: 'available' },
           { _id: '507f1f77bcf86cd799439013', roomNumber: '201', type: 'family', price: 200, status: 'available' }
         ];
+        console.log('Using mock rooms:', mockRooms);
         setAllAvailableRooms(mockRooms);
       }
 
@@ -117,18 +170,31 @@ export default function BranchManagerDashboard() {
       
       setRooms(rooms);
 
+      // Fetch bookings even if no branch is selected
       console.log('Calling bookingAPI.getBookings to get all bookings...');
-      const bookingsResponse = await bookingAPI.getBookings();
+      // Use regular booking API - tenant filtering is temporarily bypassed in backend
+      const bookingsResponse = await bookingAPI.getBookings(1, 20);
       console.log('Bookings API response:', bookingsResponse);
       let bookings = bookingsResponse.data || [];
       console.log('Bookings loaded:', bookings);
       
-      if (branch?.city === 'Pune' && bookings.length === 0) {
-        console.log('Pune branch has no bookings - showing real data');
-        // Don't add mock data, show real bookings
+      // Only show branch-specific debug info if branch exists
+      if (branch) {
+        console.log('Selected branch:', branch);
+        console.log('Branch city:', branch?.city);
+        
+        if (branch?.city === 'Pune' && bookings.length === 0) {
+          console.log('Pune branch has no bookings - showing real data');
+        }
+      } else {
+        console.log('No branch selected - showing all bookings');
       }
       
+      console.log('Final bookings to set:', bookings);
       setBookings(bookings);
+      if (bookingsResponse.pagination) {
+        setBookingPagination(bookingsResponse.pagination);
+      }
       console.log('Bookings state set:', bookings);
       
       const today = new Date();
@@ -183,16 +249,10 @@ export default function BranchManagerDashboard() {
       const branchesData = await branchAPI.getBranches(selectedHotelId);
       let branches = branchesData.data || [];
       
-      const hasPuneBranch = branches.some(branch => branch.city === 'Pune');
-      if (!hasPuneBranch) {
-        branches.push({
-          _id: '507f1f77bcf86cd799439020',
-          name: 'Pune Branch',
-          city: 'Pune',
-          address: 'Main Street, Pune',
-          hotelId: selectedHotelId
-        });
-      }
+      // Only keep Mumbai Branch and Pune Branch
+      branches = branches.filter(branch => 
+        branch.name === 'Mumbai Branch' || branch.name === 'Pune Branch'
+      );
       
       setBranches(branches);
     } catch (error) {
@@ -200,16 +260,16 @@ export default function BranchManagerDashboard() {
       const mockBranches = [
         {
           _id: '507f1f77bcf86cd799439019',
-          name: 'Main Branch',
+          name: 'Mumbai Branch',
           city: 'Mumbai',
-          address: 'Main Street, Mumbai',
+          address: '456 Park Ave, Mumbai',
           hotelId: selectedHotelId
         },
         {
           _id: '507f1f77bcf86cd799439020',
           name: 'Pune Branch',
           city: 'Pune',
-          address: 'Main Street, Pune',
+          address: '789 Market St, Pune',
           hotelId: selectedHotelId
         }
       ];
@@ -275,6 +335,7 @@ export default function BranchManagerDashboard() {
         adults: parseInt(bookingForm.adults),
         children: parseInt(bookingForm.children),
         notes: bookingForm.notes,
+        totalAmount: parseFloat(bookingForm.totalAmount) || 0,
         hotelId: selectedHotel?._id,
         branchId: selectedBranch?._id
       };
@@ -295,12 +356,15 @@ export default function BranchManagerDashboard() {
           checkOut: '',
           adults: 1,
           children: 0,
-          notes: ''
+          notes: '',
+          totalAmount: ''
         });
         setShowBookingForm(false);
         
         if (selectedBranch) {
           console.log('Refreshing all bookings data...');
+          // Add a small delay to ensure the booking is saved in database
+          await new Promise(resolve => setTimeout(resolve, 500));
           await fetchBranchData(selectedBranch._id);
           console.log('Data refreshed. New bookings count:', bookings.length);
           // Switch to bookings section to show the new booking
@@ -322,6 +386,93 @@ export default function BranchManagerDashboard() {
     navigate("/login");
   };
 
+  // Pagination handlers
+  const handlePageChange = async (newPage) => {
+    console.log('Changing to page:', newPage);
+    try {
+      const response = await bookingAPI.getBookings(newPage, bookingPagination.limit || 10);
+      setBookings(response.data || []);
+      if (response.pagination) {
+        setBookingPagination(response.pagination);
+      }
+    } catch (error) {
+      console.error('Error changing page:', error);
+    }
+  };
+
+  const handleLimitChange = async (newLimit) => {
+    console.log('Changing page limit:', newLimit);
+    try {
+      const response = await bookingAPI.getBookings(1, newLimit);
+      setBookings(response.data || []);
+      if (response.pagination) {
+        setBookingPagination(response.pagination);
+      }
+    } catch (error) {
+      console.error('Error changing limit:', error);
+    }
+  };
+
+  const handleAddRoom = async (e) => {
+    e.preventDefault();
+    
+    if (!roomForm.roomNumber || !roomForm.type || !roomForm.basePrice) {
+      alert('Please fill all required fields');
+      return;
+    }
+    
+    if (!selectedHotel || !selectedBranch) {
+      alert('Please select both hotel and branch before adding a room');
+      return;
+    }
+    
+    try {
+      const roomData = {
+        roomNumber: roomForm.roomNumber,
+        type: roomForm.type,
+        category: roomForm.category,
+        basePrice: parseFloat(roomForm.basePrice),
+        floor: parseInt(roomForm.floor),
+        bedCount: parseInt(roomForm.bedCount),
+        capacity: parseInt(roomForm.capacity),
+        status: roomForm.status,
+        hotelId: selectedHotel?._id,
+        branchId: selectedBranch?._id
+      };
+
+      console.log('Creating room with data:', roomData);
+      const response = await roomAPI.createRoom(selectedHotel?._id, selectedBranch?._id, roomData);
+      console.log('Room creation response:', response);
+      
+      if (response.data) {
+        console.log('Room created successfully, refreshing data...');
+        alert('Room created successfully!');
+        setRoomForm({
+          roomNumber: '',
+          type: 'single',
+          category: 'standard',
+          basePrice: 100,
+          floor: 1,
+          bedCount: 1,
+          capacity: 2,
+          status: 'available'
+        });
+        setShowAddRoomForm(false);
+        
+        if (selectedBranch) {
+          console.log('Refreshing rooms data...');
+          await fetchBranchData(selectedBranch._id);
+        }
+      } else {
+        console.error('Room creation failed:', response);
+        alert('Error creating room');
+      }
+    } catch (error) {
+      console.error('Error creating room:', error);
+      alert('Error creating room. Please try again.');
+    }
+  };
+
   const totalRooms = rooms.length;
   const occupiedRooms = rooms.filter(room => room.status === 'occupied').length;
   const availableRooms = rooms.filter(room => room.status === 'available').length;
@@ -337,20 +488,40 @@ export default function BranchManagerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Vertical Sidebar */}
-      <div className="w-64 bg-white shadow-md">
-        <div className="p-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Top Horizontal Navbar */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="px-6 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-semibold text-gray-900">Branch Manager Dashboard</h1>
-            <button
-              onClick={handleLogout}
-              className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-            >
-              Logout
-            </button>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">Branch Manager Dashboard</h1>
+              {selectedHotel && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Hotel: {selectedHotel.name}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Welcome, {user?.name || 'User'}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div className="flex">
+        {/* Vertical Sidebar */}
+        <div className="w-64 bg-white shadow-md">
+          <div className="p-4">
+            <h2 className="text-lg font-medium text-gray-700">Navigation</h2>
+          </div>
         
         {/* Navigation */}
         <nav className="mt-6">
@@ -429,6 +600,11 @@ export default function BranchManagerDashboard() {
                   value={selectedHotel?._id || ""}
                   onChange={(e) => {
                     const selectedHotelId = e.target.value;
+                    const hotel = hotels.find(h => h._id === selectedHotelId);
+                    setSelectedHotel(hotel);
+                    setSelectedBranch(null);
+                    setRooms([]);
+                    setBookings([]);
                     if (selectedHotelId) {
                       fetchBranchesForHotel(selectedHotelId);
                     }
@@ -505,7 +681,15 @@ export default function BranchManagerDashboard() {
           {/* Room Management Section */}
           {activeSection === 'rooms' && (
             <div className="bg-white rounded-lg shadow p-6 mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Room Management</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Room Management</h3>
+                <button
+                  onClick={() => setShowAddRoomForm(true)}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors"
+                >
+                  Add Room
+                </button>
+              </div>
               
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -557,8 +741,97 @@ export default function BranchManagerDashboard() {
 
           {/* Bookings Section */}
           {activeSection === 'bookings' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Booking Management</h3>
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Booking Management</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      console.log('Creating test bookings...');
+                      try {
+                        // Create multiple test bookings
+                        const testBookings = [
+                          {
+                            roomId: '507f1f77bcf86cd799439011', // Use a room ID from your database
+                            guestName: 'John Doe',
+                            guestEmail: 'john@example.com',
+                            guestPhone: '1234567890',
+                            checkIn: '2026-03-01',
+                            checkOut: '2026-03-02',
+                            adults: 1,
+                            children: 0,
+                            totalAmount: 180
+                          },
+                          {
+                            roomId: '507f1f77bcf86cd799439012',
+                            guestName: 'Jane Smith',
+                            guestEmail: 'jane@example.com',
+                            guestPhone: '0987654321',
+                            checkIn: '2026-03-03',
+                            checkOut: '2026-03-04',
+                            adults: 2,
+                            children: 1,
+                            totalAmount: 250
+                          },
+                          {
+                            roomId: '507f1f77bcf86cd799439013',
+                            guestName: 'Bob Johnson',
+                            guestEmail: 'bob@example.com',
+                            guestPhone: '5551234567',
+                            checkIn: '2026-03-05',
+                            checkOut: '2026-03-06',
+                            adults: 1,
+                            children: 0,
+                            totalAmount: 200
+                          }
+                        ];
+
+                        for (const bookingData of testBookings) {
+                          try {
+                            const response = await bookingAPI.createBooking(bookingData);
+                            console.log('Test booking created:', response);
+                          } catch (error) {
+                            console.log('Error creating test booking:', error);
+                          }
+                        }
+
+                        // Refresh bookings after creating test data
+                        setTimeout(async () => {
+                          const bookingsResponse = await bookingAPI.getBookings(1, 20);
+                          setBookings(bookingsResponse.data || []);
+                          if (bookingsResponse.pagination) {
+                            setBookingPagination(bookingsResponse.pagination);
+                          }
+                          alert('Test bookings created successfully!');
+                        }, 1000);
+
+                      } catch (error) {
+                        console.error('Error creating test bookings:', error);
+                        alert('Error creating test bookings');
+                      }
+                    }}
+                    className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
+                  >
+                    Create Test Bookings
+                  </button>
+                  <button
+                    onClick={async () => {
+                      console.log('Manual refresh triggered...');
+                      const bookingsResponse = await bookingAPI.getBookings(1, 20);
+                      console.log('Manual refresh response:', bookingsResponse);
+                      let bookings = bookingsResponse.data || [];
+                      setBookings(bookings);
+                      if (bookingsResponse.pagination) {
+                        setBookingPagination(bookingsResponse.pagination);
+                      }
+                      console.log('Manual refresh complete. Bookings:', bookings.length);
+                    }}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                  >
+                    Refresh Bookings
+                  </button>
+                </div>
+              </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -602,6 +875,50 @@ export default function BranchManagerDashboard() {
                     )}
                   </tbody>
                 </table>
+                
+                {/* Pagination Controls - Always visible for testing */}
+                <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+                    <div className="flex items-center justify-between w-full">
+                      <div>
+                        <p className="text-sm text-gray-700">
+                          Showing <span className="font-medium">{(bookingPagination.page - 1) * 20 + 1}</span> to <span className="font-medium">{Math.min(bookingPagination.page * 20, bookingPagination.total || bookings.length)}</span> of <span className="font-medium">{bookingPagination.total || bookings.length}</span> results
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            const newPage = bookingPagination.page - 1;
+                            if (newPage >= 1) {
+                              const response = await bookingAPI.getBookings(newPage, 20);
+                              setBookings(response.data || []);
+                              setBookingPagination(response.pagination);
+                            }
+                          }}
+                          disabled={bookingPagination.page <= 1}
+                          className={`px-4 py-2 text-sm font-medium rounded-md ${bookingPagination.page <= 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          Previous
+                        </button>
+                        <span className="px-4 py-2 text-sm text-gray-700">
+                          Page {bookingPagination.page} of {bookingPagination.pages || 1}
+                        </span>
+                        <button
+                          onClick={async () => {
+                            const newPage = bookingPagination.page + 1;
+                            if (newPage <= (bookingPagination.pages || 1)) {
+                              const response = await bookingAPI.getBookings(newPage, 20);
+                              setBookings(response.data || []);
+                              setBookingPagination(response.pagination);
+                            }
+                          }}
+                          disabled={bookingPagination.page >= (bookingPagination.pages || 1)}
+                          className={`px-4 py-2 text-sm font-medium rounded-md ${bookingPagination.page >= (bookingPagination.pages || 1) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  </div>
               </div>
             </div>
           )}
@@ -620,7 +937,12 @@ export default function BranchManagerDashboard() {
                 <button
                   type="button"
                   onClick={() => {
-                    const availableRoom = allAvailableRooms.find(room => room.status === 'available' || room.status === 'Available');
+                    const availableRoom = allAvailableRooms.find(room => 
+        room.status === 'available' || 
+        room.status === 'Available' || 
+        room.status === 'AVAILABLE' ||
+        !room.status // Include rooms with no status
+      );
                     if (availableRoom) {
                       // Use dates far in the future to avoid conflicts
                       setBookingForm({
@@ -649,6 +971,15 @@ export default function BranchManagerDashboard() {
               <form onSubmit={handleCreateBooking}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Select Room</label>
+                  {/* Debug: Show room count */}
+                  <div className="text-xs text-gray-500 mb-1">
+                    Available rooms: {allAvailableRooms.filter(room => 
+                      room.status === 'available' || 
+                      room.status === 'Available' || 
+                      room.status === 'AVAILABLE' ||
+                      !room.status
+                    ).length} / {allAvailableRooms.length}
+                  </div>
                   <select
                     name="roomId"
                     value={bookingForm.roomId}
@@ -658,10 +989,15 @@ export default function BranchManagerDashboard() {
                   >
                     <option value="">Select Room</option>
                     {allAvailableRooms
-                      .filter(room => room.status === 'available' || room.status === 'Available')
+                      .filter(room => 
+                        room.status === 'available' || 
+                        room.status === 'Available' || 
+                        room.status === 'AVAILABLE' ||
+                        !room.status // Include rooms with no status
+                      )
                       .map(room => (
                         <option key={room._id} value={room._id}>
-                          {room.roomNumber} - {room.type} - ${room.price}
+                          {room.roomNumber || 'No Number'} - {room.type || 'No Type'} - ${room.basePrice || room.price || 'No Price'}
                         </option>
                       ))}
                   </select>
@@ -750,6 +1086,20 @@ export default function BranchManagerDashboard() {
                 </div>
 
                 <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Total Amount (₹)</label>
+                  <input
+                    type="number"
+                    name="totalAmount"
+                    value={bookingForm.totalAmount}
+                    onChange={handleBookingFormChange}
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter total amount"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                   <textarea
                     name="notes"
@@ -780,6 +1130,151 @@ export default function BranchManagerDashboard() {
           </div>
         </div>
       )}
+
+      {/* Add Room Form Modal */}
+      {showAddRoomForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Room</h3>
+              
+              <form onSubmit={handleAddRoom}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Room Number</label>
+                  <input
+                    type="text"
+                    name="roomNumber"
+                    value={roomForm.roomNumber}
+                    onChange={(e) => setRoomForm({...roomForm, roomNumber: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Room Type</label>
+                  <select
+                    name="type"
+                    value={roomForm.type}
+                    onChange={(e) => setRoomForm({...roomForm, type: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  >
+                    <option value="single">Single</option>
+                    <option value="double">Double</option>
+                    <option value="twin">Twin</option>
+                    <option value="family">Family</option>
+                    <option value="dormitory">Dormitory</option>
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Room Category</label>
+                  <select
+                    name="category"
+                    value={roomForm.category}
+                    onChange={(e) => setRoomForm({...roomForm, category: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  >
+                    <option value="standard">Standard</option>
+                    <option value="deluxe">Deluxe</option>
+                    <option value="suite">Suite</option>
+                    <option value="executive">Executive</option>
+                    <option value="presidential">Presidential</option>
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Floor</label>
+                  <input
+                    type="number"
+                    name="floor"
+                    value={roomForm.floor}
+                    onChange={(e) => setRoomForm({...roomForm, floor: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    min="1"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bed Count</label>
+                  <input
+                    type="number"
+                    name="bedCount"
+                    value={roomForm.bedCount}
+                    onChange={(e) => setRoomForm({...roomForm, bedCount: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    min="1"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                  <input
+                    type="number"
+                    name="capacity"
+                    value={roomForm.capacity}
+                    onChange={(e) => setRoomForm({...roomForm, capacity: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    min="1"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Base Price ($)</label>
+                  <input
+                    type="number"
+                    name="basePrice"
+                    value={roomForm.basePrice}
+                    onChange={(e) => setRoomForm({...roomForm, basePrice: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Room Status</label>
+                  <select
+                    name="status"
+                    value={roomForm.status}
+                    onChange={(e) => setRoomForm({...roomForm, status: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  >
+                    <option value="available">Available</option>
+                    <option value="occupied">Occupied</option>
+                    <option value="cleaning">Cleaning</option>
+                    <option value="maintenance">Maintenance</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddRoomForm(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                  >
+                    Add Room
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 }

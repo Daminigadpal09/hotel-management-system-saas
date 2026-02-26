@@ -10,8 +10,8 @@ const generateToken = (user) => {
     {
       id: user._id,
       role: user.role,
-      hotelId: user.hotelId,   // 🔥 needed for tenant filter
-      branchId: user.branchId
+      hotelId: user.hotel_id,   // 🔥 needed for tenant filter
+      branchId: user.branch_id
     },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }

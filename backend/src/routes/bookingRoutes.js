@@ -9,7 +9,8 @@ import {
   checkOut,
   cancelBooking,
   deleteBooking,
-  getBookingHistory
+  getBookingHistory,
+  getAllBookingsForDebug
 } from "../controller/bookingController.js";
 
 import { protect, authorize } from "../middleware/auth.middleware.js";
@@ -79,6 +80,14 @@ router.delete(
   protect,
   authorize("owner"),
   deleteBooking
+);
+
+// Debug route to get all bookings without filtering
+router.get(
+  "/debug/all",
+  protect,
+  authorize("owner", "branch_manager", "receptionist"),
+  getAllBookingsForDebug
 );
 
 export default router;

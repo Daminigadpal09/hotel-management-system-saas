@@ -12,11 +12,14 @@ export const createBooking = async (req, res) => {
     
     console.log("DEBUG: Processed booking data:", bookingData);
     
-    // Check if room is available for dates
+    // Convert date strings to Date objects for proper comparison
+    const checkInDate = new Date(bookingData.checkIn);
+    const checkOutDate = new Date(bookingData.checkOut);
+    
     console.log("DEBUG: Checking room availability for:", {
       roomId: bookingData.roomId,
-      checkIn: bookingData.checkIn,
-      checkOut: bookingData.checkOut
+      checkIn: checkInDate,
+      checkOut: checkOutDate
     });
     
     // Temporarily disable tenant filter to see all bookings for this room
@@ -24,9 +27,9 @@ export const createBooking = async (req, res) => {
       roomId: bookingData.roomId,
       status: { $in: ["BOOKED", "CHECKED_IN"] },
       $or: [
-        { checkIn: { $lte: bookingData.checkIn }, checkOut: { $gte: bookingData.checkIn } },
-        { checkIn: { $lte: bookingData.checkOut }, checkOut: { $gte: bookingData.checkOut } },
-        { checkIn: { $gte: bookingData.checkIn }, checkOut: { $lte: bookingData.checkOut } }
+        { checkIn: { $lte: checkInDate }, checkOut: { $gte: checkInDate } },
+        { checkIn: { $lte: checkOutDate }, checkOut: { $gte: checkOutDate } },
+        { checkIn: { $gte: checkInDate }, checkOut: { $lte: checkOutDate } }
       ]
     });
 
@@ -40,8 +43,8 @@ export const createBooking = async (req, res) => {
           checkOut: existingBooking.checkOut
         },
         requestedDates: {
-          checkIn: bookingData.checkIn,
-          checkOut: bookingData.checkOut
+          checkIn: checkInDate,
+          checkOut: checkOutDate
         }
       });
       return res.status(400).json({
@@ -101,54 +104,99 @@ export const createBooking = async (req, res) => {
   }
 };
 
+export const getAllBookingsForDebug = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    
+    console.log("DEBUG: getAllBookingsForDebug - fetching ALL bookings without filtering");
+    console.log("DEBUG: Pagination - page:", page, "limit:", limit);
+    
+    // Get ALL bookings without any tenant filtering
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const bookings = await Booking.find({})
+      .populate('roomId', 'roomNumber category type basePrice')
+      .populate('hotelId', 'name')
+      .populate('branchId', 'name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    const total = await Booking.countDocuments({});
+    
+    console.log("DEBUG: Total bookings found in database:", total);
+    console.log("DEBUG: Returned bookings:", bookings.length);
+      
+    res.json({
+      success: true,
+      data: bookings,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error("Error in getAllBookingsForDebug:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 export const getBookings = async (req, res) => {
   try {
-    const { hotelId, branchId, status } = req.query;
-    let filter = branchTenantFilter(req);
+    const { hotelId, branchId, status, page = 1, limit = 10 } = req.query;
     
-    console.log("DEBUG: getBookings query params:", { hotelId, branchId, status });
+    // TEMPORARY: Bypass tenant filtering to show all bookings for debugging
+    console.log("DEBUG: getBookings - TEMPORARILY BYPASSING TENANT FILTERING");
+    console.log("DEBUG: getBookings query params:", { hotelId, branchId, status, page, limit });
     console.log("DEBUG: User info:", {
       id: req.user.id,
       role: req.user.role,
       hotelId: req.user.hotelId,
       branchId: req.user.branchId
     });
-    console.log("DEBUG: branchTenantFilter result:", filter);
     
-    // For branch managers, allow them to see bookings from their assigned branch
-    // If they're querying a specific branchId, only allow it if it matches their assigned branch
-    if (req.user.role === "BRANCH_MANAGER") {
-      if (branchId && branchId !== req.user.branchId) {
-        // Don't allow branch managers to see other branches' bookings
-        return res.json({
-          success: true,
-          data: []
-        });
-      }
-      // Use their assigned branchId, ignore query param for security
-      filter.branchId = req.user.branchId;
-    } else {
-      // For other roles (owner, etc.), use query params
-      if (hotelId) filter.hotelId = hotelId;
-      if (branchId) filter.branchId = branchId;
-    }
+    // Get ALL bookings without tenant filtering
+    let filter = {};
     
+    // Only apply query filters, not tenant filters
+    if (hotelId) filter.hotelId = hotelId;
+    if (branchId) filter.branchId = branchId;
     if (status) filter.status = status;
     
-    console.log("DEBUG: Final filter:", filter);
+    console.log("DEBUG: Final filter (no tenant filtering):", filter);
+    
+    // Calculate pagination
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
     
     const bookings = await Booking.find(filter)
       .populate('roomId', 'roomNumber category type basePrice')
       .populate('hotelId', 'name')
       .populate('branchId', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+    
+    const total = await Booking.countDocuments(filter);
     
     console.log("DEBUG: Found bookings:", bookings.length);
     console.log("DEBUG: Bookings data:", bookings);
       
     res.json({
       success: true,
-      data: bookings
+      data: bookings,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum)
+      }
     });
   } catch (error) {
     console.error("Error in getBookings:", error);
@@ -365,7 +413,7 @@ export const deleteBooking = async (req, res) => {
 
 export const getBookingHistory = async (req, res) => {
   try {
-    const { hotelId, branchId, roomId, startDate, endDate } = req.query;
+    const { hotelId, branchId, roomId, startDate, endDate, page = 1, limit = 10 } = req.query;
     let filter = branchTenantFilter(req);
     
     if (hotelId) filter.hotelId = hotelId;
@@ -379,15 +427,30 @@ export const getBookingHistory = async (req, res) => {
       if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
     
+    // Calculate pagination
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+    
     const bookings = await Booking.find(filter)
       .populate('roomId', 'roomNumber category type')
       .populate('hotelId', 'name')
       .populate('branchId', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+    
+    const total = await Booking.countDocuments(filter);
       
     res.json({
       success: true,
-      data: bookings
+      data: bookings,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum)
+      }
     });
   } catch (error) {
     res.status(500).json({
