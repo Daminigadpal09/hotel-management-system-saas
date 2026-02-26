@@ -57,6 +57,8 @@ export default function Register() {
           navigate("/super-admin");
         } else if (data.user.role === "owner") {
           navigate("/dashboard");
+        } else if (data.user.role === "branch_manager") {
+          navigate("/branch-manager-dashboard");
         } else if (data.user.role === "receptionist") {
           navigate("/receptionist-dashboard");
         } else {

@@ -4,6 +4,7 @@ import {
   getAllHotels,
   approveHotel,
   suspendHotel,
+  getAllUsers,
   getHotelUsers,
   updateSubscription
 } from "../controller/superAdminController.js";
@@ -25,6 +26,7 @@ router.put("/hotels/:hotelId/suspend", suspendHotel);
 router.put("/hotels/:hotelId/subscription", updateSubscription);
 
 // 👥 User Management
+router.get("/users", getAllUsers);
 router.get("/hotels/:hotelId/users", getHotelUsers);
 
 export default router;

@@ -74,11 +74,51 @@ export const createRoom = async (req, res) => {
   }
 };
 
+// 🛏️ Get All Rooms (for branch managers to see all available rooms)
+export const getAllRooms = async (req, res) => {
+  try {
+    // Get all rooms from database
+    const rooms = await Room.find({})
+      .sort({ hotel_id: 1, branch_id: 1, floor: 1, roomNumber: 1 });
+
+    res.json({
+      success: true,
+      data: rooms
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // 🛏️ Get Rooms (for a specific branch)
 export const getRooms = async (req, res) => {
   try {
     const { hotelId, branchId } = req.params;
     
+    // If only branchId is provided (for branch dashboard)
+    if (!hotelId && branchId) {
+      console.log('Getting rooms for branch only:', branchId);
+      
+      const { category, status, floor } = req.query;
+      const filter = { branch_id: branchId };
+      
+      if (category) filter.category = category;
+      if (status) filter.status = status;
+      if (floor) filter.floor = parseInt(floor);
+
+      const rooms = await Room.find(filter)
+        .sort({ floor: 1, roomNumber: 1 });
+
+      return res.json({
+        success: true,
+        data: rooms
+      });
+    }
+    
+    // Original logic for hotel + branch
     // Check access
     const hotel = await Hotel.findById(hotelId);
     if (!hotel) {

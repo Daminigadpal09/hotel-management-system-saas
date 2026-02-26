@@ -30,7 +30,7 @@ router.get("/users/all", authorize("owner", "super_admin"), getAllUsersForOwner)
 
 // 🏨 Hotel Routes (for hotel owners)
 router.post("/", authorize("owner"), createHotel);
-router.get("/", authorize("owner", "receptionist", "super_admin"), getHotels);
+router.get("/", authorize("owner", "branch_manager", "receptionist", "super_admin"), getHotels);
 router.get("/:id", getHotelById); // Accessible by owner and super admin
 router.put("/:id", updateHotel); // Accessible by owner and super admin
 

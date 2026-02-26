@@ -42,7 +42,7 @@ export const getPlatformAnalytics = async (req, res) => {
       .sort({ createdAt: -1 });
 
     // Get all branches
-    const allBranches = await Branch.find()
+    const allBranches = await BranchModel.find()
       .populate("hotel_id", "name")
       .sort({ createdAt: -1 });
 
@@ -177,7 +177,29 @@ export const suspendHotel = async (req, res) => {
   }
 };
 
-// 📋 Get Hotel Users
+// � Get All Users (Super Admin)
+export const getAllUsers = async (req, res) => {
+  try {
+    const allUsers = await User.find()
+      .populate("hotel_id", "name")
+      .populate("branch_id", "name")
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: allUsers
+    });
+  } catch (error) {
+    console.error("Error in getAllUsers:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// �📋 Get Hotel Users
 export const getHotelUsers = async (req, res) => {
   try {
     const { hotelId } = req.params;

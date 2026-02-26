@@ -23,7 +23,7 @@ export default function RoomManagementEnhanced() {
     type: "", 
     minPrice: "", 
     maxPrice: "",
- 
+    selectedRoom: "" // Add selected room filter
   });
   const [branchPricing, setBranchPricing] = useState({
     basePrice: 1000,
@@ -147,9 +147,17 @@ export default function RoomManagementEnhanced() {
 
   const fetchRooms = async () => {
     if (!hotelId) {
-      console.log("No hotel selected, skipping room fetch");
-      setRooms([]);
-      setLoading(false); // Set loading to false here
+      console.log("No hotel selected, fetching all rooms from database");
+      // Fetch all rooms from database when no hotel selected
+      try {
+        const allRoomsData = await roomAPI.getAllRooms();
+        setRooms(allRoomsData.data || []);
+        console.log('All rooms from database:', allRoomsData.data);
+      } catch (error) {
+        console.error("Error fetching all rooms from database:", error);
+        setRooms([]);
+      }
+      setLoading(false);
       return;
     }
     
@@ -298,6 +306,11 @@ export default function RoomManagementEnhanced() {
       }
     }
   };
+
+  // Filter rooms based on selected room
+  const filteredRooms = filter.selectedRoom 
+    ? rooms.filter(room => room._id === filter.selectedRoom)
+    : rooms;
 
   // Maintenance issue management
   const handleReportMaintenance = async (roomId) => {
@@ -456,6 +469,12 @@ export default function RoomManagementEnhanced() {
             </div>
             <div className="flex items-center space-x-4">
               <button
+                onClick={() => navigate('/branch-manager-dashboard')}
+                className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 font-medium"
+              >
+                ← Back to Dashboard
+              </button>
+              <button
                 onClick={() => navigate(`/branches/${hotelId}`)}
                 className="text-sm text-gray-600 hover:text-gray-800"
               >
@@ -536,7 +555,23 @@ export default function RoomManagementEnhanced() {
             </div>
 
             {/* Enhanced Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Room</label>
+                <select
+                  value={filter.selectedRoom}
+                  onChange={(e) => setFilter({...filter, selectedRoom: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Rooms</option>
+                  {rooms.map((room) => (
+                    <option key={room._id} value={room._id}>
+                      {room.roomNumber} - {room.type} - {room.status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                 <select
@@ -805,6 +840,13 @@ export default function RoomManagementEnhanced() {
             )}
 
             {/* Rooms List */}
+            {/* Debug Info */}
+            <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+              <p>Total rooms loaded: {rooms.length}</p>
+              <p>Filtered rooms: {filteredRooms.length}</p>
+              <p>Selected room: {filter.selectedRoom ? `Room ID: ${filter.selectedRoom}` : 'All rooms'}</p>
+            </div>
+            
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -820,14 +862,14 @@ export default function RoomManagementEnhanced() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {rooms.length === 0 ? (
+                  {filteredRooms.length === 0 ? (
                     <tr>
                       <td colSpan="8" className="px-6 py-4 text-center text-sm text-gray-500">
-                        No rooms found. Add your first room to get started.
+                        {filter.selectedRoom ? 'No room found with the selected filter.' : 'No rooms found. Add your first room to get started.'}
                       </td>
                     </tr>
                   ) : (
-                    rooms.map((room) => (
+                    filteredRooms.map((room) => (
                       <tr key={room._id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {room.roomNumber}
@@ -883,6 +925,20 @@ export default function RoomManagementEnhanced() {
           </div>
         </div>
       </main>
+      
+      {/* Bottom Navigation */}
+      <div className="bg-white border-t">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-center">
+            <button
+              onClick={() => navigate('/branch-manager-dashboard')}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
+            >
+              ← Back to Branch Manager Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

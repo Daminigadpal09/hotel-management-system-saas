@@ -173,7 +173,14 @@ export const roomAPI = {
   
   deleteRoom: (hotelId, branchId, roomId) => apiRequest(`/hotels/${hotelId}/branches/${branchId}/rooms/${roomId}`, {
     method: "DELETE"
-  })
+  }),
+  
+  getRoomsByBranch: (branchId, filters = {}) => {
+    const queryString = new URLSearchParams(filters).toString();
+    return apiRequest(`/branches/${branchId}/rooms${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getAllRooms: () => apiRequest('/all-rooms')
 };
 
 // Maintenance API calls
@@ -248,7 +255,7 @@ export const bookingAPI = {
   
   getBookingsByHotel: (hotelId) => apiRequest(`/bookings?hotelId=${hotelId}`),
   
-  getBookingsByBranch: (hotelId, branchId) => apiRequest(`/bookings?hotelId=${hotelId}&branchId=${branchId}`)
+  getBookingsByBranch: (branchId) => apiRequest(`/bookings?branchId=${branchId}`)
 };
 
 // User Management API calls
@@ -375,6 +382,11 @@ export const billingAPI = {
   getBranchRevenue: (branchId, params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/billing/revenue/branch/${branchId}${queryString ? '?' + queryString : ''}`);
+  },
+  
+  getRevenue: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/billing/revenue${queryString ? '?' + queryString : ''}`);
   },
   
   calculateTaxes: (params = {}) => {

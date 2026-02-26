@@ -12,7 +12,14 @@ export const createBooking = async (req, res) => {
     
     console.log("DEBUG: Processed booking data:", bookingData);
     
-    // Check if room is available for the dates
+    // Check if room is available for dates
+    console.log("DEBUG: Checking room availability for:", {
+      roomId: bookingData.roomId,
+      checkIn: bookingData.checkIn,
+      checkOut: bookingData.checkOut
+    });
+    
+    // Temporarily disable tenant filter to see all bookings for this room
     const existingBooking = await Booking.findOne({
       roomId: bookingData.roomId,
       status: { $in: ["BOOKED", "CHECKED_IN"] },
@@ -23,7 +30,20 @@ export const createBooking = async (req, res) => {
       ]
     });
 
+    console.log("DEBUG: Existing booking found:", existingBooking);
+
     if (existingBooking) {
+      console.log("DEBUG: Room conflict detected:", {
+        existingBookingId: existingBooking._id,
+        existingDates: {
+          checkIn: existingBooking.checkIn,
+          checkOut: existingBooking.checkOut
+        },
+        requestedDates: {
+          checkIn: bookingData.checkIn,
+          checkOut: bookingData.checkOut
+        }
+      });
       return res.status(400).json({
         success: false,
         message: "Room is already booked for these dates"
@@ -87,11 +107,32 @@ export const getBookings = async (req, res) => {
     let filter = branchTenantFilter(req);
     
     console.log("DEBUG: getBookings query params:", { hotelId, branchId, status });
+    console.log("DEBUG: User info:", {
+      id: req.user.id,
+      role: req.user.role,
+      hotelId: req.user.hotelId,
+      branchId: req.user.branchId
+    });
     console.log("DEBUG: branchTenantFilter result:", filter);
-    console.log("DEBUG: User info:", req.user);
     
-    if (hotelId) filter.hotelId = hotelId;
-    if (branchId) filter.branchId = branchId;
+    // For branch managers, allow them to see bookings from their assigned branch
+    // If they're querying a specific branchId, only allow it if it matches their assigned branch
+    if (req.user.role === "BRANCH_MANAGER") {
+      if (branchId && branchId !== req.user.branchId) {
+        // Don't allow branch managers to see other branches' bookings
+        return res.json({
+          success: true,
+          data: []
+        });
+      }
+      // Use their assigned branchId, ignore query param for security
+      filter.branchId = req.user.branchId;
+    } else {
+      // For other roles (owner, etc.), use query params
+      if (hotelId) filter.hotelId = hotelId;
+      if (branchId) filter.branchId = branchId;
+    }
+    
     if (status) filter.status = status;
     
     console.log("DEBUG: Final filter:", filter);
@@ -103,12 +144,14 @@ export const getBookings = async (req, res) => {
       .sort({ createdAt: -1 });
     
     console.log("DEBUG: Found bookings:", bookings.length);
+    console.log("DEBUG: Bookings data:", bookings);
       
     res.json({
       success: true,
       data: bookings
     });
   } catch (error) {
+    console.error("Error in getBookings:", error);
     res.status(500).json({
       success: false,
       message: error.message

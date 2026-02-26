@@ -15,19 +15,19 @@ router.use(protect);
 
 router.post(
   "/",
-  authorize("OWNER"),
+  authorize("owner"),
   createBranch
 );
 
 router.get(
   "/all",
-  authorize("OWNER", "RECEPTIONIST", "SUPER_ADMIN"),
+  authorize("owner", "receptionist", "super_admin"),
   getAllBranches
 );
 
 router.get(
   "/",
-  authorize("OWNER", "BRANCH_MANAGER"),
+  authorize("owner", "branch_manager"),
   getBranches
 );
 
