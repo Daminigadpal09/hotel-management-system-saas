@@ -1,0 +1,25 @@
+      const hotelsWithRoomData = await Promise.all(
+        (data.data || []).map(async function(hotel) {
+          try {
+            // First get branches for this hotel
+            const branchesResponse = await branchAPI.getBranches(hotel._id);
+            const branches = branchesResponse.data || [];
+            
+            // Then get rooms for each branch
+            let allRooms = [];
+            if (branches.length > 0) {
+              const roomsPromises = branches.map(branch => {
+                return roomAPI.getRooms(hotel._id, branch._id).catch(() => ({ data: [] }));
+              });
+              const roomsResponses = await Promise.all(roomsPromises);
+              allRooms = roomsResponses.flatMap(response => response.data || []);
+            }
+            
+            const totalRooms = allRooms.length;
+            const availableRooms = allRooms.filter(r => r.status === 'available').length;
+            return { ...hotel, totalRooms, availableRooms, branches: branches.length };
+          } catch {
+            return { ...hotel, totalRooms: 0, availableRooms: 0, branches: 0 };
+          }
+        })
+      );
