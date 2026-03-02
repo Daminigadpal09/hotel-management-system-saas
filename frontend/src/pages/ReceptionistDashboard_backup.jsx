@@ -15,12 +15,9 @@ export default function ReceptionistDashboard() {
   const [showNewBooking, setShowNewBooking] = useState(false);
   const [showBookingsPage, setShowBookingsPage] = useState(false);
   const [showRoomManagement, setShowRoomManagement] = useState(false);
-  const [showGuestManagement, setShowGuestManagement] = useState(false);
   const [showBilling, setShowBilling] = useState(false);
   const [showCheckInModal, setShowCheckInModal] = useState(null);
   const [showCheckOutModal, setShowCheckOutModal] = useState(null);
-  const [guestForm, setGuestForm] = useState({name: '', email: '', phone: '', address: ''});
-  const [showGuestDropdown, setShowGuestDropdown] = useState(false);
   const [showRoomStatusModal, setShowRoomStatusModal] = useState(null);
   const [roomMgmtTab, setRoomMgmtTab] = useState('status'); // status, categories, inventory, pricing, add, billing
   const [roomForm, setRoomForm] = useState({
@@ -32,9 +29,6 @@ export default function ReceptionistDashboard() {
     amenities: []
   });
   const [billingTab, setBillingTab] = useState('invoices'); // invoices, payments
-  const [guestSearchTerm, setGuestSearchTerm] = useState('');
-  const [showAddGuestModal, setShowAddGuestModal] = useState(false);
-  const [editingGuest, setEditingGuest] = useState(null);
   const [billingInvoices, setBillingInvoices] = useState([]);
   const [billingPayments, setBillingPayments] = useState([]);
   const [billingLoading, setBillingLoading] = useState(false);
@@ -311,30 +305,6 @@ export default function ReceptionistDashboard() {
   
   const activeBookings = bookings.filter(b => b.status === "CHECKED_IN");
   const availableRooms = rooms.filter(r => r.status === "available");
-  
-  // Filter guests based on search term
-  const filteredGuests = guests.filter(guest => {
-    const searchLower = (guestSearchTerm || '').toLowerCase();
-    return (
-      guest.name?.toLowerCase().includes(searchLower) ||
-      guest.email?.toLowerCase().includes(searchLower) ||
-      guest.phone?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const handleDeleteGuest = async (guestId) => {
-    try {
-      await guestAPI.deleteGuest(guestId);
-      alert('Guest deleted successfully!');
-      // Refresh guests
-      const hotelId = user.hotel_id?._id || user.hotel_id || user.hotelId;
-      const guestsResponse = await guestAPI.getGuests(hotelId);
-      setGuests(guestsResponse.data || guestsResponse);
-    } catch (error) {
-      console.error('Error deleting guest:', error);
-      alert('Error deleting guest: ' + (error.response?.data?.message || error.message));
-    }
-  };
 
   if (loading) {
     return (
@@ -383,7 +353,7 @@ export default function ReceptionistDashboard() {
                 <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                New Booking
+                📅 New Booking
               </button>
               <button
                 onClick={() => {
@@ -410,35 +380,27 @@ export default function ReceptionistDashboard() {
                 </svg>
                 Room Status
               </button>
-              <button
-                onClick={() => {
-                  setShowGuestManagement(true);
-                  setShowBilling(false);
-                  setShowBookingsPage(false);
-                  setShowNewBooking(false);
-                  setShowRoomManagement(false);
-                }}
-                className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              >
-                <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Guest Management
-              </button>
-              <button
-                onClick={() => {
-                  setShowBilling(true);
-                  setShowBookingsPage(false);
-                  setShowNewBooking(false);
-                  setShowRoomManagement(false);
-                  setShowGuestManagement(false);
-                }}
+              <Link
+                to="/billing"
                 className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
               >
                 <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 4.077a1 1 0 01-1.123.606l-2.257-4.077a1 1 0 01-.502-1.21L7.228 3.684A1 1 0 018.172 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5z" />
                 </svg>
-                Billing
+                💰 Billing
+              </Link>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Quick Actions</h3>
+              <button
+                onClick={() => navigate("/bookings")}
+                className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              >
+                <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Today's Tasks
               </button>
             </div>
 
@@ -1266,30 +1228,22 @@ export default function ReceptionistDashboard() {
                                 return;
                               }
                               try {
-                                const amount = parseFloat(invoiceForm.amount) || 0;
-                                const taxAmount = amount * 0.18;
-                                const totalAmount = amount + taxAmount;
-                                
                                 await billingAPI.createInvoice({
                                   guestId: invoiceForm.guestId,
                                   roomId: invoiceForm.roomId,
-                                  hotelId: selectedHotel?._id,
-                                  branchId: selectedBranch?._id,
-                                  items: [{description: invoiceForm.description || 'Room Charge', quantity: 1, unitPrice: amount, total: amount, taxRate: 18, taxAmount: taxAmount}],
-                                  subtotal: amount,
-                                  taxAmount: taxAmount,
-                                  totalAmount: totalAmount,
-                                  status: 'draft',
-                                  dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Due in 30 days
-                                  createdBy: user._id,
-                                  taxCalculations: {cgst: 9, sgst: 9, igst: 0, totalTax: taxAmount}
+                                  items: [{description: invoiceForm.description || 'Room Charge', quantity: 1, unitPrice: invoiceForm.amount, total: invoiceForm.amount}],
+                                  subtotal: invoiceForm.amount,
+                                  taxCalculations: {cgst: 9, sgst: 9, igst: 0, totalTax: invoiceForm.amount * 0.18},
+                                  total: invoiceForm.amount * 1.18,
+                                  status: 'pending',
+                                  branch: selectedBranch?._id
                                 });
                                 alert('Invoice created successfully!');
                                 setInvoiceForm({guestId: '', roomId: '', amount: '', description: ''});
                                 fetchBillingData();
                               } catch(error) {
                                 console.error('Error creating invoice:', error);
-                                alert('Failed to create invoice: ' + (error.response?.data?.message || error.message));
+                                alert('Failed to create invoice');
                               }
                             }} className="px-4 py-2 bg-teal-600 text-white rounded text-sm">Create Invoice</button>
                           </div>
@@ -1317,19 +1271,14 @@ export default function ReceptionistDashboard() {
                                 return;
                               }
                               try {
-                                await billingAPI.createPayment({
-                                  ...paymentForm,
-                                  hotelId: selectedHotel?._id,
-                                  branchId: selectedBranch?._id,
-                                  paymentType: paymentForm.amount >= (billingInvoices.find(i => i._id === paymentForm.invoiceId)?.totalAmount || 0) ? 'full' : 'partial'
-                                });
+                                await billingAPI.createPayment(paymentForm);
                                 await billingAPI.updateInvoice(paymentForm.invoiceId, {status:'paid'});
                                 alert('Payment recorded successfully!');
                                 setPaymentForm({invoiceId: '', amount: 0, paymentMethod: 'cash'});
                                 fetchBillingData();
                               } catch(error) {
                                 console.error('Error recording payment:', error);
-                                alert('Failed to record payment: ' + (error.response?.data?.message || error.message));
+                                alert('Failed to record payment');
                               }
                             }} className="px-4 py-2 bg-teal-600 text-white rounded text-sm">Record Payment</button>
                             
@@ -1378,7 +1327,7 @@ export default function ReceptionistDashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                           <select value={invoiceForm.guestId} onChange={(e) => setInvoiceForm({...invoiceForm, guestId: e.target.value})} className="p-2 border rounded text-sm">
                             <option value="">Select Guest</option>
-                            {guests.map(g => <option key={g._id} value={g._id}>{g.name} - {g.email || 'No email'}</option>)}
+                            {guests.map(g => <option key={g._id} value={g._id}>{g.name}</option>)}
                           </select>
                           <select value={invoiceForm.roomId} onChange={(e) => setInvoiceForm({...invoiceForm, roomId: e.target.value})} className="p-2 border rounded text-sm">
                             <option value="">Select Room</option>
@@ -1395,30 +1344,22 @@ export default function ReceptionistDashboard() {
                             return;
                           }
                           try {
-                            const amount = parseFloat(invoiceForm.amount) || 0;
-                            const taxAmount = amount * 0.18;
-                            const totalAmount = amount + taxAmount;
-                            
                             await billingAPI.createInvoice({
                               guestId: invoiceForm.guestId,
                               roomId: invoiceForm.roomId,
-                              hotelId: selectedHotel?._id,
-                              branchId: selectedBranch?._id,
-                              items: [{description: invoiceForm.description || 'Room Charge', quantity: 1, unitPrice: amount, total: amount, taxRate: 18, taxAmount: taxAmount}],
-                              subtotal: amount,
-                              taxAmount: taxAmount,
-                              totalAmount: totalAmount,
-                              status: 'draft',
-                              dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                              createdBy: user._id,
-                              taxCalculations: {cgst: 9, sgst: 9, igst: 0, totalTax: taxAmount}
+                              items: [{description: invoiceForm.description || 'Room Charge', quantity: 1, unitPrice: invoiceForm.amount, total: invoiceForm.amount}],
+                              subtotal: invoiceForm.amount,
+                              taxCalculations: {cgst: 9, sgst: 9, igst: 0, totalTax: invoiceForm.amount * 0.18},
+                              total: invoiceForm.amount * 1.18,
+                              status: 'pending',
+                              branch: selectedBranch?._id
                             });
                             alert('Invoice created successfully!');
                             setInvoiceForm({guestId: '', roomId: '', amount: '', description: ''});
                             fetchBillingData();
                           } catch(error) {
                             console.error('Error creating invoice:', error);
-                            alert('Failed to create invoice: ' + (error.response?.data?.message || error.message));
+                            alert('Failed to create invoice');
                           }
                         }} className="px-4 py-2 bg-teal-600 text-white rounded text-sm">Create Invoice</button>
                       </div>
@@ -1446,19 +1387,14 @@ export default function ReceptionistDashboard() {
                             return;
                           }
                           try {
-                            await billingAPI.createPayment({
-                              ...paymentForm,
-                              hotelId: selectedHotel?._id,
-                              branchId: selectedBranch?._id,
-                              paymentType: paymentForm.amount >= (billingInvoices.find(i => i._id === paymentForm.invoiceId)?.totalAmount || 0) ? 'full' : 'partial'
-                            });
+                            await billingAPI.createPayment(paymentForm);
                             await billingAPI.updateInvoice(paymentForm.invoiceId, {status:'paid'});
                             alert('Payment recorded successfully!');
                             setPaymentForm({invoiceId: '', amount: 0, paymentMethod: 'cash'});
                             fetchBillingData();
                           } catch(error) {
                             console.error('Error recording payment:', error);
-                            alert('Failed to record payment: ' + (error.response?.data?.message || error.message));
+                            alert('Failed to record payment');
                           }
                         }} className="px-4 py-2 bg-teal-600 text-white rounded text-sm">Record Payment</button>
                         
@@ -1476,680 +1412,6 @@ export default function ReceptionistDashboard() {
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
-              ) : showBilling ? (
-                <div className="bg-white rounded-lg shadow">
-                  <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-gray-900">Billing & Payments</h3>
-                    <button
-                      onClick={() => setShowBilling(false)}
-                      className="text-sm text-gray-500 hover:text-gray-700"
-                    >
-                      ← Back to Dashboard
-                    </button>
-                  </div>
-                  
-                  {/* Tab Navigation */}
-                  <div className="border-b border-gray-200">
-                    <nav className="flex -mb-px">
-                      <button
-                        onClick={() => setBillingTab('invoices')}
-                        className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                          billingTab === 'invoices'
-                            ? 'border-teal-500 text-teal-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
-                      >
-                        Invoices
-                      </button>
-                      <button
-                        onClick={() => setBillingTab('guests')}
-                        className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                          billingTab === 'guests'
-                            ? 'border-teal-500 text-teal-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
-                      >
-                        Guest Management
-                      </button>
-                      <button
-                        onClick={() => setBillingTab('payments')}
-                        className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                          billingTab === 'payments'
-                            ? 'border-teal-500 text-teal-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
-                      >
-                        Payments
-                      </button>
-                    </nav>
-                  </div>
-
-                  <div className="p-6">
-                    {billingTab === 'invoices' && (
-                      <div>
-                        <div className="flex justify-between items-center mb-6">
-                          <h4 className="text-lg font-medium text-gray-900">Invoices</h4>
-                          <button
-                            onClick={() => setInvoiceForm({guestName: '', roomId: '', amount: '', description: ''})}
-                            className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 text-sm font-medium"
-                          >
-                            Create Invoice
-                          </button>
-                        </div>
-                        
-                        {invoiceForm.guestName !== '' ? (
-                          <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                            <h5 className="text-md font-medium text-gray-900 mb-4">Create New Invoice</h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="relative">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Guest Name</label>
-                                <div className="flex">
-                                  <input
-                                    type="text"
-                                    value={invoiceForm.guestName || ''}
-                                    onChange={(e) => setInvoiceForm({...invoiceForm, guestName: e.target.value})}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                    placeholder="Enter guest name"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowGuestDropdown(!showGuestDropdown)}
-                                    className="absolute inset-y-0 right-0 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
-                                    </svg>
-                                  </button>
-                                </div>
-                                {showGuestDropdown && (
-                                  <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg">
-                                    <div className="py-1">
-                                      {guests.map(guest => (
-                                        <button
-                                          key={guest._id}
-                                          onClick={() => {
-                                            setInvoiceForm({...invoiceForm, guestName: guest.name});
-                                            setShowGuestDropdown(false);
-                                          }}
-                                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                        >
-                                          {guest.name}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Room/Booking</label>
-                                <select
-                                  value={invoiceForm.roomId}
-                                  onChange={(e) => setInvoiceForm({...invoiceForm, roomId: e.target.value})}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                >
-                                  <option value="">Select Room/Booking</option>
-                                  {bookings.map(booking => (
-                                    <option key={booking._id} value={booking._id}>
-                                      Room {booking.roomId?.roomNumber || 'N/A'} - {booking.guestName} ({booking.status})
-                                    </option>
-                                  ))}
-                                  {rooms.map(room => (
-                                    <option key={room._id} value={room._id}>
-                                      Room {room.roomNumber} - {room.category} - ${room.basePrice}/night
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
-                                <input
-                                  type="number"
-                                  value={invoiceForm.amount}
-                                  onChange={(e) => setInvoiceForm({...invoiceForm, amount: e.target.value})}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                  placeholder="0.00"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                                <input
-                                  type="text"
-                                  value={invoiceForm.description}
-                                  onChange={(e) => setInvoiceForm({...invoiceForm, description: e.target.value})}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                  placeholder="Invoice description"
-                                />
-                              </div>
-                            </div>
-                            <div className="mt-4 flex justify-end space-x-3">
-                              <button
-                                onClick={() => setInvoiceForm({guestName: '', roomId: '', amount: '', description: ''})}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    const amount = parseFloat(invoiceForm.amount) || 0;
-                                    const taxAmount = amount * 0.18;
-                                    const totalAmount = amount + taxAmount;
-                                    
-                                    // Find guest ID from name if available
-                                    const guest = guests.find(g => g.name === invoiceForm.guestName);
-                                    
-                                    await billingAPI.createInvoice({
-                                      guestId: guest?._id,
-                                      hotelId: selectedHotel?._id,
-                                      branchId: selectedBranch?._id,
-                                      roomId: invoiceForm.roomId,
-                                      items: [{description: invoiceForm.description || 'Room Charge', quantity: 1, unitPrice: amount, total: amount, taxRate: 18, taxAmount: taxAmount}],
-                                      subtotal: amount,
-                                      taxAmount: taxAmount,
-                                      totalAmount: totalAmount,
-                                      status: 'draft',
-                                      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                                      createdBy: user._id,
-                                      taxCalculations: {cgst: 9, sgst: 9, igst: 0, totalTax: taxAmount}
-                                    });
-                                    alert('Invoice created successfully!');
-                                    setInvoiceForm({guestName: '', roomId: '', amount: '', description: ''});
-                                  } catch (error) {
-                                    alert('Error creating invoice: ' + (error.response?.data?.message || error.message));
-                                  }
-                                }}
-                                className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
-                              >
-                                Create Invoice
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice #</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
-                                {billingInvoices.length === 0 ? (
-                                  <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                                      No invoices found
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  billingInvoices.map((invoice) => (
-                                    <tr key={invoice._id} className="hover:bg-gray-50">
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        #{invoice.invoiceNumber || 'INV-' + invoice._id.slice(-6)}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {invoice.guestId?.name || 'N/A'}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {invoice.roomId?.roomNumber || 'N/A'}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${invoice.amount || 0}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                          invoice.status === 'PAID' ? 'bg-green-100 text-green-800' :
-                                          invoice.status === 'PARTIAL' ? 'bg-yellow-100 text-yellow-800' :
-                                          'bg-red-100 text-red-800'
-                                        }`}>
-                                          {invoice.status || 'PENDING'}
-                                        </span>
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button
-                                          onClick={() => setPaymentForm({invoiceId: invoice._id, amount: invoice.amount, paymentMethod: 'cash'})}
-                                          className="text-teal-600 hover:text-teal-900"
-                                        >
-                                          Record Payment
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {billingTab === 'guests' && (
-                      <div>
-                        <div className="flex justify-between items-center mb-6">
-                          <h4 className="text-lg font-medium text-gray-900">Guest Management</h4>
-                          <button
-                            onClick={() => setGuestForm({name: '', email: '', phone: '', address: ''})}
-                            className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 text-sm font-medium"
-                          >
-                            Add New Guest
-                          </button>
-                        </div>
-                        
-                        {guestForm.name !== '' ? (
-                          <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                            <h5 className="text-md font-medium text-gray-900 mb-4">Add New Guest</h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                                <input
-                                  type="text"
-                                  value={guestForm.name}
-                                  onChange={(e) => setGuestForm({...guestForm, name: e.target.value})}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                  placeholder="Enter guest name"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input
-                                  type="email"
-                                  value={guestForm.email}
-                                  onChange={(e) => setGuestForm({...guestForm, email: e.target.value})}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                  placeholder="Enter email address"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                                <input
-                                  type="tel"
-                                  value={guestForm.phone}
-                                  onChange={(e) => setGuestForm({...guestForm, phone: e.target.value})}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                  placeholder="Enter phone number"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                                <textarea
-                                  value={guestForm.address}
-                                  onChange={(e) => setGuestForm({...guestForm, address: e.target.value})}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                  placeholder="Enter address"
-                                  rows="3"
-                                />
-                              </div>
-                            </div>
-                            <div className="mt-4 flex justify-end space-x-3">
-                              <button
-                                onClick={() => setGuestForm({name: '', email: '', phone: '', address: ''})}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    await guestAPI.createGuest(guestForm);
-                                    alert('Guest added successfully!');
-                                    setGuestForm({name: '', email: '', phone: '', address: ''});
-                                  } catch (error) {
-                                    alert('Error adding guest');
-                                  }
-                                }}
-                                className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
-                              >
-                                Add Guest
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
-                                {guests.length === 0 ? (
-                                  <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                                      No guests found
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  guests.map((guest) => (
-                                    <tr key={guest._id} className="hover:bg-gray-50">
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {guest.name}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {guest.email || 'N/A'}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {guest.phone || 'N/A'}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs">
-                                        <div className="truncate">{guest.address || 'N/A'}</div>
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button
-                                          onClick={() => setGuestForm({...guestForm, name: guest.name, email: guest.email, phone: guest.phone, address: guest.address})}
-                                          className="text-teal-600 hover:text-teal-900"
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          onClick={async () => {
-                                            try {
-                                              await guestAPI.deleteGuest(guest._id);
-                                              alert('Guest deleted successfully!');
-                                            } catch (error) {
-                                              alert('Error deleting guest');
-                                            }
-                                          }}
-                                          className="text-red-600 hover:text-red-900 ml-2"
-                                        >
-                                          Delete
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {billingTab === 'payments' && (
-                      <div>
-                        <div className="flex justify-between items-center mb-6">
-                          <h4 className="text-lg font-medium text-gray-900">Payments</h4>
-                        </div>
-                        
-                        {paymentForm.invoiceId !== '' ? (
-                          <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                            <h5 className="text-md font-medium text-gray-900 mb-4">Record Payment</h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Invoice</label>
-                                <select
-                                  value={paymentForm.invoiceId}
-                                  onChange={(e) => {
-                                    const selectedInvoice = billingInvoices.find(inv => inv._id === e.target.value);
-                                    setPaymentForm({
-                                      ...paymentForm, 
-                                      invoiceId: e.target.value, 
-                                      amount: selectedInvoice?.amount || 0
-                                    });
-                                  }}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                >
-                                  <option value="">Select Invoice</option>
-                                  {billingInvoices.map(invoice => (
-                                    <option key={invoice._id} value={invoice._id}>
-                                      #{invoice.invoiceNumber || 'INV-' + invoice._id.slice(-6)} - {invoice.guestId?.name} - ${invoice.amount}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
-                                <input
-                                  type="number"
-                                  value={paymentForm.amount}
-                                  onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                  placeholder="0.00"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-                                <select
-                                  value={paymentForm.paymentMethod}
-                                  onChange={(e) => setPaymentForm({...paymentForm, paymentMethod: e.target.value})}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                >
-                                  <option value="cash">Cash</option>
-                                  <option value="card">Credit Card</option>
-                                  <option value="bank">Bank Transfer</option>
-                                  <option value="online">Online Payment</option>
-                                </select>
-                              </div>
-                              <div className="flex items-end">
-                                <button
-                                  onClick={async () => {
-                                    try {
-                                      await billingAPI.createPayment({
-                                        ...paymentForm,
-                                        hotelId: selectedHotel?._id,
-                                        branchId: selectedBranch?._id,
-                                        paymentType: paymentForm.amount >= (billingInvoices.find(i => i._id === paymentForm.invoiceId)?.totalAmount || 0) ? 'full' : 'partial'
-                                      });
-                                      alert('Payment recorded successfully!');
-                                      setPaymentForm({invoiceId: '', amount: 0, paymentMethod: 'cash'});
-                                    } catch (error) {
-                                      alert('Error recording payment: ' + (error.response?.data?.message || error.message));
-                                    }
-                                  }}
-                                  className="w-full px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
-                                >
-                                  Record Payment
-                                </button>
-                              </div>
-                            </div>
-                            <div className="mt-4">
-                              <button
-                                onClick={() => setPaymentForm({invoiceId: '', amount: 0, paymentMethod: 'cash'})}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment #</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                </tr>
-                              </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
-                                {billingPayments.length === 0 ? (
-                                  <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                                      No payments found
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  billingPayments.map((payment) => (
-                                    <tr key={payment._id} className="hover:bg-gray-50">
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        #{payment.paymentNumber || 'PAY-' + payment._id.slice(-6)}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        #{payment.invoiceId?.invoiceNumber || 'INV-' + payment.invoiceId?._id?.slice(-6)}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${payment.amount || 0}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <span className={`px-2 py-1 text-xs rounded-full ${
-                                          payment.paymentMethod === 'cash' ? 'bg-green-100 text-green-800' :
-                                          payment.paymentMethod === 'card' ? 'bg-blue-100 text-blue-800' :
-                                          payment.paymentMethod === 'bank' ? 'bg-purple-100 text-purple-800' :
-                                          'bg-orange-100 text-orange-800'
-                                        }`}>
-                                          {payment.paymentMethod}
-                                        </span>
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {new Date(payment.createdAt).toLocaleDateString()}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                          payment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                                          'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                          {payment.status || 'COMPLETED'}
-                                        </span>
-                                      </td>
-                                    </tr>
-                                  ))
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : showGuestManagement ? (
-                <div className="bg-white rounded-lg shadow">
-                  <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-gray-900">Guest Management</h3>
-                    <button
-                      onClick={() => setShowGuestManagement(false)}
-                      className="text-sm text-gray-500 hover:text-gray-700"
-                    >
-                      ← Back to Dashboard
-                    </button>
-                  </div>
-                  
-                  <div className="p-6">
-                    {/* Search and Add Guest */}
-                    <div className="flex justify-between items-center mb-6">
-                      <div className="flex-1 max-w-md">
-                        <input
-                          type="text"
-                          placeholder="Search guests by name, email, or phone..."
-                          value={guestSearchTerm || ''}
-                          onChange={(e) => setGuestSearchTerm(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        />
-                      </div>
-                      <button
-                        onClick={() => {
-                          setGuestForm({name: '', email: '', phone: '', address: '', dateOfBirth: '', nationality: ''});
-                          setEditingGuest(null);
-                          setShowAddGuestModal(true);
-                        }}
-                        className="ml-4 px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 text-sm font-medium"
-                      >
-                        + Add New Guest
-                      </button>
-                    </div>
-                    
-                    {/* Guest List */}
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Bookings</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {(guestSearchTerm ? filteredGuests : guests).length === 0 ? (
-                            <tr>
-                              <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                                <div className="flex flex-col items-center">
-                                  <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  </svg>
-                                  <p className="text-lg font-medium text-gray-900 mb-1">No guests found</p>
-                                  <p>Add your first guest to get started</p>
-                                </div>
-                              </td>
-                            </tr>
-                          ) : (
-                            (guestSearchTerm ? filteredGuests : guests).map((guest) => (
-                              <tr key={guest._id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="flex items-center">
-                                    <div className="flex-shrink-0 h-10 w-10">
-                                      <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center">
-                                        <span className="text-sm font-medium text-teal-600">
-                                          {guest.name?.charAt(0).toUpperCase() || '?'}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="ml-4">
-                                      <div className="text-sm font-medium text-gray-900">{guest.name}</div>
-                                      {guest.dateOfBirth && (
-                                        <div className="text-sm text-gray-500">DOB: {new Date(guest.dateOfBirth).toLocaleDateString()}</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-900">{guest.email || 'N/A'}</div>
-                                  <div className="text-sm text-gray-500">{guest.phone || 'N/A'}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs">
-                                  <div className="truncate">{guest.address || 'N/A'}</div>
-                                  {guest.nationality && <div className="text-gray-500">{guest.nationality}</div>}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  {guest.totalBookings || 0}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  <button
-                                    onClick={() => {
-                                      setGuestForm({
-                                        name: guest.name || '',
-                                        email: guest.email || '',
-                                        phone: guest.phone || '',
-                                        address: guest.address || '',
-                                        dateOfBirth: guest.dateOfBirth || '',
-                                        nationality: guest.nationality || ''
-                                      });
-                                      setEditingGuest(guest);
-                                      setShowAddGuestModal(true);
-                                    }}
-                                    className="text-teal-600 hover:text-teal-900 mr-3"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (confirm('Are you sure you want to delete this guest?')) {
-                                        handleDeleteGuest(guest._id);
-                                      }
-                                    }}
-                                    className="text-red-600 hover:text-red-900"
-                                  >
-                                    Delete
-                                  </button>
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
                   </div>
                 </div>
               ) : (
@@ -2890,133 +2152,6 @@ export default function ReceptionistDashboard() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add/Edit Guest Modal */}
-      {showAddGuestModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">
-                {editingGuest ? 'Edit Guest' : 'Add New Guest'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowAddGuestModal(false);
-                  setEditingGuest(null);
-                  setGuestForm({name: '', email: '', phone: '', address: '', dateOfBirth: '', nationality: ''});
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              try {
-                if (editingGuest) {
-                  await guestAPI.updateGuest(editingGuest._id, guestForm);
-                  alert('Guest updated successfully!');
-                } else {
-                  await guestAPI.createGuest(guestForm);
-                  alert('Guest added successfully!');
-                }
-                setShowAddGuestModal(false);
-                setEditingGuest(null);
-                setGuestForm({name: '', email: '', phone: '', address: '', dateOfBirth: '', nationality: ''});
-                // Refresh guests
-                const hotelId = user.hotel_id?._id || user.hotel_id || user.hotelId;
-                const guestsResponse = await guestAPI.getGuests(hotelId);
-                setGuests(guestsResponse.data || guestsResponse);
-              } catch (error) {
-                alert('Error: ' + (error.response?.data?.message || error.message));
-              }
-            }} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
-                  <input
-                    type="text"
-                    value={guestForm.name}
-                    onChange={(e) => setGuestForm({...guestForm, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={guestForm.email}
-                    onChange={(e) => setGuestForm({...guestForm, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
-                  <input
-                    type="tel"
-                    value={guestForm.phone}
-                    onChange={(e) => setGuestForm({...guestForm, phone: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={guestForm.dateOfBirth}
-                    onChange={(e) => setGuestForm({...guestForm, dateOfBirth: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Nationality</label>
-                  <input
-                    type="text"
-                    value={guestForm.nationality}
-                    onChange={(e) => setGuestForm({...guestForm, nationality: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    placeholder="e.g., Indian, American"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                  <textarea
-                    value={guestForm.address}
-                    onChange={(e) => setGuestForm({...guestForm, address: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    rows="3"
-                    placeholder="Enter full address"
-                  />
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddGuestModal(false);
-                    setEditingGuest(null);
-                    setGuestForm({name: '', email: '', phone: '', address: '', dateOfBirth: '', nationality: ''});
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
-                >
-                  {editingGuest ? 'Update Guest' : 'Add Guest'}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
