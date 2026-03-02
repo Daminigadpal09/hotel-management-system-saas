@@ -5,7 +5,10 @@ import {
   markRoomCleaned,
   getMaintenanceIssues,
   reportMaintenanceIssue,
-  resolveMaintenanceIssue
+  resolveMaintenanceIssue,
+  getAllMaintenance,
+  createMaintenance,
+  updateMaintenance
 } from "../controller/maintenanceController.js";
 import { protect, authorize } from "../middleware/auth.middleware.js";
 
@@ -23,5 +26,11 @@ router.put("/hotels/:hotelId/branches/:branchId/rooms/:roomId/cleaned", authoriz
 router.get("/hotels/:hotelId/branches/:branchId/maintenance", getMaintenanceIssues);
 router.post("/hotels/:hotelId/branches/:branchId/rooms/:roomId/maintenance", authorize("owner", "branch_manager", "receptionist", "housekeeping"), reportMaintenanceIssue);
 router.put("/hotels/:hotelId/branches/:branchId/rooms/:roomId/maintenance/resolve", authorize("owner", "branch_manager"), resolveMaintenanceIssue);
+
+// Additional routes for housekeeping dashboard
+router.get("/maintenance", getAllMaintenance);
+router.post("/maintenance", authorize("owner", "branch_manager", "receptionist", "housekeeping"), createMaintenance);
+router.put("/maintenance/:id", authorize("owner", "branch_manager", "housekeeping"), updateMaintenance);
+router.get("/maintenance/:id", getAllMaintenance);
 
 export default router;

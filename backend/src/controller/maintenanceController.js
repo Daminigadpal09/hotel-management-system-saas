@@ -313,3 +313,159 @@ export const resolveMaintenanceIssue = async (req, res) => {
     });
   }
 };
+
+// Get All Maintenance (for housekeeping dashboard)
+export const getAllMaintenance = async (req, res) => {
+  try {
+    const { branchId, status } = req.query;
+    
+    // Build query
+    let query = {};
+    if (branchId) {
+      query.branch_id = branchId;
+    }
+    if (status) {
+      query.status = status;
+    }
+    
+    // Get rooms with maintenance issues or cleaning status
+    const rooms = await Room.find({
+      ...query,
+      $or: [
+        { status: "maintenance" },
+        { status: "out_of_order" },
+        { status: "cleaning" }
+      ]
+    }).populate("hotel_id branch_id").sort({ updatedAt: -1 });
+
+    // Transform to maintenance tasks format
+    const tasks = rooms.map(room => ({
+      _id: room._id,
+      roomId: room,
+      taskType: room.status === "cleaning" ? "cleaning" : "maintenance",
+      status: room.status === "cleaning" ? "in_progress" : (room.maintenanceIssue?.status || "open"),
+      priority: room.maintenanceIssue?.priority || "normal",
+      notes: room.maintenanceIssue?.issue || room.cleaningNotes || "",
+      createdAt: room.maintenanceIssue?.reportedAt || room.updatedAt,
+      branchId: room.branch_id,
+      hotelId: room.hotel_id
+    }));
+
+    res.json({
+      success: true,
+      data: tasks
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Create Maintenance Task
+export const createMaintenance = async (req, res) => {
+  try {
+    const { roomId, taskType, priority, notes, branchId, hotelId } = req.body;
+    
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found"
+      });
+    }
+
+    if (taskType === "cleaning") {
+      room.status = "cleaning";
+      room.cleaningNotes = notes;
+      await room.save();
+      
+      return res.json({
+        success: true,
+        message: "Cleaning task created successfully",
+        data: room
+      });
+    } else {
+      room.status = "maintenance";
+      room.maintenanceIssue = {
+        issue: notes,
+        priority: priority || "medium",
+        reportedBy: req.user.id,
+        reportedAt: new Date(),
+        status: "open"
+      };
+      await room.save();
+      
+      return res.json({
+        success: true,
+        message: "Maintenance issue reported successfully",
+        data: room
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Update Maintenance Task
+export const updateMaintenance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, notes, priority } = req.body;
+    
+    const room = await Room.findById(id);
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found"
+      });
+    }
+
+    if (room.status === "cleaning") {
+      if (status === "completed") {
+        room.status = "available";
+        room.lastCleaned = new Date();
+        room.cleaningNotes = notes || room.cleaningNotes;
+      } else if (notes) {
+        room.cleaningNotes = notes;
+      }
+      await room.save();
+      
+      return res.json({
+        success: true,
+        message: "Cleaning task updated successfully",
+        data: room
+      });
+    } else {
+      if (status === "completed") {
+        room.maintenanceIssue.status = "resolved";
+        room.maintenanceIssue.resolvedBy = req.user.id;
+        room.maintenanceIssue.resolvedAt = new Date();
+        room.status = "available";
+      } else if (status === "in_progress") {
+        room.maintenanceIssue.status = "in_progress";
+      } else if (notes) {
+        room.maintenanceIssue.issue = notes;
+      }
+      if (priority) {
+        room.maintenanceIssue.priority = priority;
+      }
+      await room.save();
+      
+      return res.json({
+        success: true,
+        message: "Maintenance task updated successfully",
+        data: room
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

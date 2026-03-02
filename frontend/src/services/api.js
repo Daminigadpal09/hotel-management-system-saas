@@ -114,6 +114,7 @@ export const hotelAPI = {
   getHotelById: (id) => apiRequest(`/hotels/${id}`),
 
   getHotelRooms: (hotelId, branchId) => roomAPI.getRooms(hotelId, branchId),
+  getHotelRoomsAll: (hotelId) => apiRequest(`/rooms/hotel/${hotelId}/all`),
 
   getAllBranches: () => apiRequest("/branches/all"),
 
@@ -247,6 +248,25 @@ export const maintenanceAPI = {
         body: JSON.stringify(resolutionData),
       },
     ),
+
+  // Additional methods for housekeeping dashboard
+  getMaintenanceByBranch: (branchId) =>
+    apiRequest(`/maintenance?branchId=${branchId}`),
+
+  createMaintenance: (data) =>
+    apiRequest("/maintenance", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateMaintenance: (id, data) =>
+    apiRequest(`/maintenance/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  getMaintenanceById: (id) =>
+    apiRequest(`/maintenance/${id}`),
 };
 
 // Booking API calls

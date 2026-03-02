@@ -8,6 +8,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import HotelOwnerDashboard from "./pages/HotelOwnerDashboard";
 import BranchManagerDashboard from "./pages/BranchManagerDashboard";
 import ReceptionistDashboard from "./pages/ReceptionistDashboard";
+import HousekeepingDashboard from "./pages/HousekeepingDashboard";
 import BranchManagement from "./pages/BranchManagement";
 import RoomManagement from "./pages/RoomManagementEnhanced";
 import BookingManagement from "./pages/BookingManagement";
@@ -25,7 +26,7 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         <Route
-          path="/dashboard"
+          path="/owner-dashboard"
           element={
             <ProtectedRoute>
               <HotelOwnerDashboard />
@@ -53,6 +54,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ReceptionistDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/housekeeping-dashboard"
+          element={
+            <ProtectedRoute>
+              <HousekeepingDashboard />
             </ProtectedRoute>
           }
         />

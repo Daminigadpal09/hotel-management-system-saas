@@ -29,15 +29,27 @@ export default function Login() {
         console.log("Login successful, redirecting...");
         
         // Redirect based on role
-        if (data.user.role === "super_admin") {
+        const role = data.user.role?.toLowerCase();
+        console.log("User role detected:", role);
+        console.log("Full user data:", data.user);
+        
+        if (role === "super_admin") {
+          console.log("Redirecting to super admin");
           navigate("/super-admin");
-        } else if (data.user.role === "owner") {
+        } else if (role === "owner") {
+          console.log("Redirecting to owner dashboard");
           navigate("/owner-dashboard");
-        } else if (data.user.role === "branch_manager") {
+        } else if (role === "branch_manager") {
+          console.log("Redirecting to branch manager");
           navigate("/branch-manager-dashboard");
-        } else if (data.user.role === "receptionist") {
+        } else if (role === "receptionist") {
+          console.log("Redirecting to receptionist");
           navigate("/receptionist-dashboard");
+        } else if (role === "housekeeper" || role === "housekeeping") {
+          console.log("Redirecting to housekeeping");
+          navigate("/housekeeping-dashboard");
         } else {
+          console.log("Unknown role, redirecting to default dashboard");
           navigate("/dashboard");
         }
       } else {
