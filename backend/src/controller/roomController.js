@@ -77,8 +77,16 @@ export const createRoom = async (req, res) => {
 // 🛏️ Get All Rooms (for branch managers to see all available rooms)
 export const getAllRooms = async (req, res) => {
   try {
-    // Get all rooms from database
-    const rooms = await Room.find({})
+    const { hotelId } = req.params;
+    
+    // Build query based on parameters
+    let query = {};
+    if (hotelId) {
+      query.hotel_id = hotelId;
+    }
+    
+    // Get rooms from database
+    const rooms = await Room.find(query)
       .sort({ hotel_id: 1, branch_id: 1, floor: 1, roomNumber: 1 });
 
     res.json({

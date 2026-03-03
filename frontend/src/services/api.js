@@ -114,7 +114,7 @@ export const hotelAPI = {
   getHotelById: (id) => apiRequest(`/hotels/${id}`),
 
   getHotelRooms: (hotelId, branchId) => roomAPI.getRooms(hotelId, branchId),
-  getHotelRoomsAll: (hotelId) => apiRequest(`/rooms/hotel/${hotelId}/all`),
+  getHotelRoomsAll: (hotelId) => apiRequest(`/hotels/${hotelId}/rooms/all`),
 
   getAllBranches: () => apiRequest("/branches/all"),
 
@@ -252,6 +252,10 @@ export const maintenanceAPI = {
   // Additional methods for housekeeping dashboard
   getMaintenanceByBranch: (branchId) =>
     apiRequest(`/maintenance?branchId=${branchId}`),
+  
+  // Get all maintenance tasks without branch filter (for housekeeping dashboard)
+  getAllMaintenance: () =>
+    apiRequest(`/maintenance`),
 
   createMaintenance: (data) =>
     apiRequest("/maintenance", {

@@ -21,7 +21,7 @@ router.post(
 
 router.get(
   "/all",
-  authorize("owner", "receptionist", "super_admin"),
+  authorize("owner", "receptionist", "super_admin", "housekeeping"),
   getAllBranches
 );
 

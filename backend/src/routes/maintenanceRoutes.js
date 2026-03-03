@@ -28,9 +28,9 @@ router.post("/hotels/:hotelId/branches/:branchId/rooms/:roomId/maintenance", aut
 router.put("/hotels/:hotelId/branches/:branchId/rooms/:roomId/maintenance/resolve", authorize("owner", "branch_manager"), resolveMaintenanceIssue);
 
 // Additional routes for housekeeping dashboard
-router.get("/maintenance", getAllMaintenance);
+router.get("/maintenance", authorize("owner", "branch_manager", "receptionist", "housekeeping"), getAllMaintenance);
 router.post("/maintenance", authorize("owner", "branch_manager", "receptionist", "housekeeping"), createMaintenance);
 router.put("/maintenance/:id", authorize("owner", "branch_manager", "housekeeping"), updateMaintenance);
-router.get("/maintenance/:id", getAllMaintenance);
+router.get("/maintenance/:id", authorize("owner", "branch_manager", "receptionist", "housekeeping"), getAllMaintenance);
 
 export default router;
