@@ -440,6 +440,16 @@ export const billingAPI = {
 
   generateInvoicePDF: (id) => apiRequest(`/billing/invoices/${id}/pdf`),
 
+  // Get billing by branch
+  getBillingByBranch: (branchId) => apiRequest(`/billing/branch/${branchId}`),
+
+  // Create billing record
+  createBilling: (billingData) =>
+    apiRequest("/billing/invoices/simple", {
+      method: "POST",
+      body: JSON.stringify(billingData),
+    }),
+
   // Payment APIs
   getPayments: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
@@ -485,5 +495,42 @@ export const billingAPI = {
   calculateTaxes: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/billing/taxes${queryString ? "?" + queryString : ""}`);
+  },
+};
+
+// Payment API calls
+export const paymentAPI = {
+  getPayments: (page = 1, limit = 10) =>
+    apiRequest(`/payments?page=${page}&limit=${limit}`),
+
+  getPaymentById: (paymentId) => apiRequest(`/payments/${paymentId}`),
+
+  getPaymentsByBranch: (branchId) => apiRequest(`/payments/branch/${branchId}`),
+
+  createPayment: (paymentData) =>
+    apiRequest("/payments", {
+      method: "POST",
+      body: JSON.stringify(paymentData),
+    }),
+
+  updatePayment: (paymentId, paymentData) =>
+    apiRequest(`/payments/${paymentId}`, {
+      method: "PUT",
+      body: JSON.stringify(paymentData),
+    }),
+
+  deletePayment: (paymentId) =>
+    apiRequest(`/payments/${paymentId}`, {
+      method: "DELETE",
+    }),
+
+  getPaymentsByDateRange: (startDate, endDate) =>
+    apiRequest(`/payments/date-range?start=${startDate}&end=${endDate}`),
+
+  getPaymentMethods: () => apiRequest("/payments/methods"),
+
+  getPaymentStats: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/payments/stats${queryString ? "?" + queryString : ""}`);
   },
 };

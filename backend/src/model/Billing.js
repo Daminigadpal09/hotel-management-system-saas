@@ -28,6 +28,16 @@ const invoiceSchema = new mongoose.Schema({
     required: true
   },
   
+  // Guest information (for simple billing)
+  guestName: {
+    type: String,
+    required: false
+  },
+  roomNumber: {
+    type: String,
+    required: false
+  },
+  
   // Billing details
   items: [{
     description: String,
@@ -91,72 +101,6 @@ const invoiceSchema = new mongoose.Schema({
     igst: Number,
     totalTax: Number
   }
-}, {
-  timestamps: true
-});
-
-// Payment Schema
-const paymentSchema = new mongoose.Schema({
-  paymentNumber: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  invoiceId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Invoice',
-    required: true
-  },
-  hotelId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Hotel',
-    required: true
-  },
-  branchId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Branch',
-    required: true
-  },
-  
-  // Payment details
-  amount: {
-    type: Number,
-    required: true
-  },
-  paymentMethod: {
-    type: String,
-    enum: ['cash', 'card', 'upi', 'bank_transfer', 'cheque', 'online'],
-    required: true
-  },
-  paymentType: {
-    type: String,
-    enum: ['full', 'partial'],
-    required: true
-  },
-  
-  // Status
-  status: {
-    type: String,
-    enum: ['pending', 'completed', 'failed', 'refunded'],
-    default: 'pending'
-  },
-  
-  // Transaction details
-  transactionId: String,
-  referenceNumber: String,
-  
-  // Dates
-  paymentDate: {
-    type: Date,
-    default: Date.now
-  },
-  
-  // Metadata
-  processedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  notes: String
 }, {
   timestamps: true
 });
@@ -247,10 +191,7 @@ const branchRevenueSchema = new mongoose.Schema({
 
 // Indexes
 invoiceSchema.index({ hotelId: 1, branchId: 1, status: 1 });
-paymentSchema.index({ hotelId: 1, branchId: 1, status: 1 });
-paymentSchema.index({ invoiceId: 1 });
 branchRevenueSchema.index({ branchId: 1, period: 1, startDate: -1 });
 
 export const Invoice = mongoose.model('Invoice', invoiceSchema);
-export const Payment = mongoose.model('Payment', paymentSchema);
 export const HotelBranchRevenue = mongoose.model('HotelBranchRevenue', branchRevenueSchema);

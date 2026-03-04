@@ -48,6 +48,9 @@ export default function Login() {
         } else if (role === "housekeeper" || role === "housekeeping") {
           console.log("Redirecting to housekeeping");
           navigate("/housekeeping-dashboard");
+        } else if (role === "accountant") {
+          console.log("Redirecting to accountant");
+          navigate("/accountant-dashboard");
         } else {
           console.log("Unknown role, redirecting to default dashboard");
           navigate("/dashboard");

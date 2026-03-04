@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { Invoice, Payment, HotelBranchRevenue } from '../model/Billing.js';
+import { Invoice, HotelBranchRevenue } from '../model/Billing.js';
+import Payment from '../model/Payment.js';
 import { tenantFilter, branchTenantFilter } from '../utils/tenantFilter.js';
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
@@ -581,6 +582,123 @@ export const calculateTaxes = async (req, res) => {
     });
   } catch (error) {
     console.error("Calculate taxes error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get billing records by branch
+export const getBillingByBranch = async (req, res) => {
+  try {
+    const { branchId } = req.params;
+    const { page = 1, limit = 10, status } = req.query;
+    const skip = (page - 1) * limit;
+
+    // Build filter
+    const filter = { branchId };
+    if (status) filter.status = status;
+
+    const billingRecords = await Invoice.find(filter)
+      .populate('hotelId', 'name')
+      .populate('branchId', 'name')
+      .populate('bookingId', 'guestName roomNumber')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Invoice.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: billingRecords,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error("Get billing by branch error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Create simple billing record for Accountant Dashboard
+export const createSimpleBilling = async (req, res) => {
+  try {
+    console.log('DEBUG: Simple billing request body:', req.body);
+    const { 
+      guestName, 
+      roomNumber, 
+      amount, 
+      type, 
+      description, 
+      dueDate, 
+      hotelId, 
+      branchId 
+    } = req.body;
+
+    // Validate required fields
+    if (!guestName || !roomNumber || !amount || !hotelId || !branchId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: guestName, roomNumber, amount, hotelId, branchId'
+      });
+    }
+
+    // Generate invoice number
+    const invoiceNumber = await generateInvoiceNumber(hotelId, branchId);
+
+    // Create simple invoice item
+    const items = [{
+      description: description || `${type} - ${guestName}`,
+      quantity: 1,
+      unitPrice: parseFloat(amount),
+      taxAmount: 0,
+      totalAmount: parseFloat(amount)
+    }];
+
+    // Calculate totals
+    const subtotal = parseFloat(amount);
+    const taxAmount = 0;
+    const totalAmount = subtotal + taxAmount;
+
+    // Create invoice
+    const invoice = new Invoice({
+      invoiceNumber,
+      hotelId,
+      branchId,
+      guestName, // Store guest name directly for simplicity
+      roomNumber,
+      items,
+      subtotal,
+      taxAmount,
+      totalAmount,
+      status: 'pending',
+      dueDate: new Date(dueDate),
+      notes: description,
+      generatedBy: req.user._id
+    });
+
+    await invoice.save();
+
+    const populatedInvoice = await Invoice.findById(invoice._id)
+      .populate('hotelId', 'name')
+      .populate('branchId', 'name')
+      .populate('generatedBy', 'name email');
+
+    res.status(201).json({
+      success: true,
+      data: populatedInvoice
+    });
+  } catch (error) {
+    console.error("Create simple billing error:", error);
     res.status(500).json({
       success: false,
       message: error.message

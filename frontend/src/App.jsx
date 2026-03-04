@@ -9,6 +9,7 @@ import HotelOwnerDashboard from "./pages/HotelOwnerDashboard";
 import BranchManagerDashboard from "./pages/BranchManagerDashboard";
 import ReceptionistDashboard from "./pages/ReceptionistDashboard";
 import HousekeepingDashboard from "./pages/HousekeepingDashboard";
+import AccountantDashboard from "./pages/AccountantDashboard";
 import BranchManagement from "./pages/BranchManagement";
 import RoomManagement from "./pages/RoomManagementEnhanced";
 import BookingManagement from "./pages/BookingManagement";
@@ -24,6 +25,16 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Default dashboard route - redirects based on role */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/owner-dashboard"
@@ -62,6 +73,14 @@ function App() {
           element={
             <ProtectedRoute>
               <HousekeepingDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accountant-dashboard"
+          element={
+            <ProtectedRoute>
+              <AccountantDashboard />
             </ProtectedRoute>
           }
         />

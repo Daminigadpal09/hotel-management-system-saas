@@ -13,6 +13,7 @@ import maintenanceRoutes from "./routes/maintenanceRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import guestRoutes from "./routes/guestRoutes.js";
 import billingRoutes from "./routes/billingRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use("/api", maintenanceRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/guests", guestRoutes);
 app.use("/api/billing", billingRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // 404 Handler - using middleware
 app.use((req, res) => {
