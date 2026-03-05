@@ -75,7 +75,11 @@ export const authorize = (...roles) => {
     console.log("DEBUG: Authorize middleware:", {
       userRole: req.user?.role,
       requiredRoles: roles,
-      hasUser: !!req.user
+      hasUser: !!req.user,
+      userRoleType: typeof req.user?.role,
+      requiredRolesType: typeof roles,
+      rolesArray: Array.isArray(roles),
+      includesResult: roles.includes(req.user?.role)
     });
     
     if (!req.user) {
@@ -84,6 +88,12 @@ export const authorize = (...roles) => {
         message: "Not authenticated",
       });
     }
+
+    console.log("DEBUG: Role check:", {
+      userRole: req.user?.role,
+      requiredRoles: roles,
+      includes: roles.includes(req.user?.role)
+    });
 
     if (!roles.includes(req.user.role)) {
       console.log("DEBUG: Role check failed:", {

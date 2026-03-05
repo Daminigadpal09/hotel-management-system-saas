@@ -21,13 +21,13 @@ router.post(
 
 router.get(
   "/all",
-  authorize("owner", "receptionist", "super_admin", "housekeeping"),
+  authorize("owner", "receptionist", "super_admin", "housekeeping", "accountant"),
   getAllBranches
 );
 
 router.get(
   "/",
-  authorize("owner", "branch_manager"),
+  authorize("owner", "branch_manager", "accountant"),
   getBranches
 );
 

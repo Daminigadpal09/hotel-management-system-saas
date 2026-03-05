@@ -147,17 +147,30 @@ export const getInvoices = async (req, res) => {
 // Update invoice
 export const updateInvoice = async (req, res) => {
   try {
+    console.log("DEBUG: Update invoice request:", {
+      params: req.params,
+      body: req.body,
+      user: req.user,
+      userHotelId: req.user.hotelId,
+      userId: req.user.id
+    });
+    
     const filter = tenantFilter(req);
     filter._id = req.params.id;
+    
+    console.log("DEBUG: Filter for update:", filter);
     
     const invoice = await Invoice.findOneAndUpdate(filter, req.body, { new: true });
     
     if (!invoice) {
+      console.log("DEBUG: Invoice not found with filter:", filter);
       return res.status(404).json({
         success: false,
         message: "Invoice not found"
       });
     }
+    
+    console.log("DEBUG: Invoice updated successfully:", invoice);
     
     res.json({
       success: true,
@@ -680,10 +693,10 @@ export const createSimpleBilling = async (req, res) => {
       subtotal,
       taxAmount,
       totalAmount,
-      status: 'pending',
+      status: 'sent', // Changed from 'pending' - valid values: draft, sent, paid, partially_paid, overdue, cancelled
       dueDate: new Date(dueDate),
       notes: description,
-      generatedBy: req.user._id
+      createdBy: req.user.id // Changed from generatedBy to createdBy
     });
 
     await invoice.save();
@@ -691,7 +704,7 @@ export const createSimpleBilling = async (req, res) => {
     const populatedInvoice = await Invoice.findById(invoice._id)
       .populate('hotelId', 'name')
       .populate('branchId', 'name')
-      .populate('generatedBy', 'name email');
+      .populate('createdBy', 'name email');
 
     res.status(201).json({
       success: true,

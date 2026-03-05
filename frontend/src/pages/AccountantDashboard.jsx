@@ -30,7 +30,8 @@ export default function AccountantDashboard() {
     amount: '',
     type: 'room_charge',
     description: '',
-    dueDate: ''
+    dueDate: '',
+    status: 'pending'
   });
 
   const navigate = useNavigate();
@@ -167,7 +168,7 @@ export default function AccountantDashboard() {
         hotelId: selectedHotel._id,
         branchId: selectedBranch._id,
         amount: parseFloat(billingForm.amount),
-        status: 'pending',
+        status: billingForm.status || 'pending',
         createdBy: user._id
       };
       
@@ -181,7 +182,8 @@ export default function AccountantDashboard() {
         amount: '',
         type: 'room_charge',
         description: '',
-        dueDate: ''
+        dueDate: '',
+        status: 'pending'
       });
       fetchBillingAndPayments(selectedHotel._id, selectedBranch._id);
     } catch (error) {
@@ -190,16 +192,41 @@ export default function AccountantDashboard() {
     }
   };
 
+  const handleMarkAsPaid = async (recordId) => {
+    try {
+      await billingAPI.updateInvoice(recordId, { status: 'paid' });
+      alert("Billing record marked as paid!");
+      fetchBillingAndPayments(selectedHotel._id, selectedBranch._id);
+    } catch (error) {
+      console.error("Error marking as paid:", error);
+      alert("Error marking as paid: " + error.message);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login");
   };
 
+  // Combine payment records with paid billing records
+  const allPaymentRecords = [
+    ...paymentRecords,
+    ...billingRecords.filter(r => r.status === 'paid').map(record => ({
+      _id: record._id,
+      billingId: record._id,
+      amount: record.totalAmount || record.amount,
+      paymentMethod: 'billing',
+      transactionId: record.invoiceNumber || '-',
+      createdAt: record.createdAt || record.dueDate,
+      status: 'paid'
+    }))
+  ];
+
   // Calculate statistics
-  const totalBilling = billingRecords.reduce((sum, record) => sum + record.amount, 0);
-  const totalPayments = paymentRecords.reduce((sum, record) => sum + record.amount, 0);
-  const pendingBilling = billingRecords.filter(r => r.status === 'pending').reduce((sum, record) => sum + record.amount, 0);
-  const paidBilling = billingRecords.filter(r => r.status === 'paid').reduce((sum, record) => sum + record.amount, 0);
+  const totalBilling = billingRecords.reduce((sum, record) => sum + (record.totalAmount || record.amount || 0), 0);
+  const totalPayments = allPaymentRecords.reduce((sum, record) => sum + record.amount, 0);
+  const pendingBilling = billingRecords.filter(r => r.status === 'pending' || r.status === 'sent').reduce((sum, record) => sum + (record.totalAmount || record.amount || 0), 0);
+  const paidBilling = billingRecords.filter(r => r.status === 'paid').reduce((sum, record) => sum + (record.totalAmount || record.amount || 0), 0);
 
   if (loading) {
     return (
@@ -427,7 +454,7 @@ export default function AccountantDashboard() {
                           <tr key={record._id}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.guestName}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.roomNumber}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.amount.toFixed(2)}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.totalAmount?.toFixed(2) || '0.00'}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.type}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -442,17 +469,25 @@ export default function AccountantDashboard() {
                               {new Date(record.dueDate).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              {record.status === 'pending' && (
-                                <button
-                                  onClick={() => {
-                                    setSelectedRecord(record);
-                                    setPaymentForm({...paymentForm, billingId: record._id, amount: record.amount});
-                                    setShowPaymentModal(true);
-                                  }}
-                                  className="text-blue-600 hover:text-blue-900 mr-3"
-                                >
-                                  Record Payment
-                                </button>
+                              {(record.status === 'pending' || record.status === 'sent') && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedRecord(record);
+                                      setPaymentForm({...paymentForm, billingId: record._id, amount: record.amount});
+                                      setShowPaymentModal(true);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-900 mr-3"
+                                  >
+                                    Record Payment
+                                  </button>
+                                  <button
+                                    onClick={() => handleMarkAsPaid(record._id)}
+                                    className="text-green-600 hover:text-green-900 mr-3"
+                                  >
+                                    Mark as Paid
+                                  </button>
+                                </>
                               )}
                               <button className="text-gray-600 hover:text-gray-900">View</button>
                             </td>
@@ -473,7 +508,7 @@ export default function AccountantDashboard() {
               </div>
               
               <div className="p-6">
-                {paymentRecords.length === 0 ? (
+                {allPaymentRecords.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
                       <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -488,6 +523,7 @@ export default function AccountantDashboard() {
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">API ID</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Billing ID</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
@@ -497,8 +533,9 @@ export default function AccountantDashboard() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {paymentRecords.map(payment => (
+                        {allPaymentRecords.map(payment => (
                           <tr key={payment._id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment._id}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.billingId}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${payment.amount.toFixed(2)}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{payment.paymentMethod}</td>
@@ -507,7 +544,11 @@ export default function AccountantDashboard() {
                               {new Date(payment.createdAt).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                payment.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
                                 {payment.status}
                               </span>
                             </td>
@@ -657,6 +698,20 @@ export default function AccountantDashboard() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={billingForm.status}
+                    onChange={(e) => setBillingForm({...billingForm, status: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
                 </div>
               </div>
               

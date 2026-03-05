@@ -37,12 +37,19 @@ export default function ReceptionistDashboard() {
   const [editingGuest, setEditingGuest] = useState(null);
   const [billingInvoices, setBillingInvoices] = useState([]);
   const [billingPayments, setBillingPayments] = useState([]);
+  const [billingRecords, setBillingRecords] = useState([]);
   const [billingLoading, setBillingLoading] = useState(false);
   const [invoiceForm, setInvoiceForm] = useState({guestId: '', roomId: '', amount: '', description: ''});
   const [paymentForm, setPaymentForm] = useState({invoiceId: '', amount: 0, paymentMethod: 'cash'});
   const navigate = useNavigate();
   
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // Calculate billing statistics
+  const totalBilling = billingRecords.reduce((sum, record) => sum + (record.totalAmount || record.amount || 0), 0);
+  const totalPayments = billingPayments.reduce((sum, record) => sum + record.amount, 0);
+  const pendingBilling = billingRecords.filter(r => r.status === 'pending' || r.status === 'sent').reduce((sum, record) => sum + (record.totalAmount || record.amount || 0), 0);
+  const paidBilling = billingRecords.filter(r => r.status === 'paid').reduce((sum, record) => sum + (record.totalAmount || record.amount || 0), 0);
 
   const [bookingForm, setBookingForm] = useState({
     guestName: "",

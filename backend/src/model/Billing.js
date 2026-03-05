@@ -15,7 +15,7 @@ const invoiceSchema = new mongoose.Schema({
   guestId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Guest',
-    required: true
+    required: false
   },
   hotelId: {
     type: mongoose.Schema.Types.ObjectId,

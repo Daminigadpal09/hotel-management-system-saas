@@ -1,4 +1,8 @@
 export const tenantFilter = (req) => {
+  // For accountants, don't filter by hotelId to allow access to all billing records
+  if (req.user.role === 'accountant') {
+    return {};
+  }
   return { hotelId: req.user.hotelId || req.user.id };
 };
 

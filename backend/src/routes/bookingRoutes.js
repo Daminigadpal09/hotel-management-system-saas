@@ -21,35 +21,35 @@ const router = express.Router();
 router.post(
   "/",
   protect,
-  authorize("owner", "branch_manager", "receptionist"),
+  authorize("owner", "branch_manager", "receptionist", "accountant"),
   createBooking
 );
 
 router.get(
   "/",
   protect,
-  authorize("owner", "branch_manager", "receptionist"),
+  authorize("owner", "branch_manager", "receptionist", "accountant"),
   getBookings
 );
 
 router.get(
   "/history",
   protect,
-  authorize("owner", "branch_manager", "receptionist"),
+  authorize("owner", "branch_manager", "receptionist", "accountant"),
   getBookingHistory
 );
 
 router.get(
   "/:id",
   protect,
-  authorize("owner", "branch_manager", "receptionist"),
+  authorize("owner", "branch_manager", "receptionist", "accountant"),
   getBookingById
 );
 
 router.put(
   "/:id",
   protect,
-  authorize("owner", "branch_manager", "receptionist"),
+  authorize("owner", "branch_manager", "receptionist", "accountant"),
   updateBooking
 );
 
@@ -86,7 +86,7 @@ router.delete(
 router.get(
   "/debug/all",
   protect,
-  authorize("owner", "branch_manager", "receptionist"),
+  authorize("owner", "branch_manager", "receptionist", "accountant"),
   getAllBookingsForDebug
 );
 

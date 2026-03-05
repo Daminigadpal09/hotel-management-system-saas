@@ -16,20 +16,20 @@ const router = express.Router();
 router.use(protect);
 
 // 🛏️ Room Routes (nested under hotels and branches)
-router.post("/hotels/:hotelId/branches/:branchId/rooms", authorize("owner", "branch_manager", "receptionist"), createRoom);
-router.get("/hotels/:hotelId/branches/:branchId/rooms", authorize("owner", "branch_manager", "receptionist"), getRooms);
+router.post("/hotels/:hotelId/branches/:branchId/rooms", authorize("owner", "branch_manager", "receptionist", "accountant"), createRoom);
+router.get("/hotels/:hotelId/branches/:branchId/rooms", authorize("owner", "branch_manager", "receptionist", "accountant"), getRooms);
 router.get("/hotels/:hotelId/branches/:branchId/rooms/:roomId", getRoomById);
-router.put("/hotels/:hotelId/branches/:branchId/rooms/:roomId", authorize("owner", "branch_manager", "receptionist"), updateRoom);
-router.patch("/hotels/:hotelId/branches/:branchId/rooms/:roomId/status", authorize("owner", "branch_manager", "receptionist", "housekeeping"), updateRoomStatus);
+router.put("/hotels/:hotelId/branches/:branchId/rooms/:roomId", authorize("owner", "branch_manager", "receptionist", "accountant"), updateRoom);
+router.patch("/hotels/:hotelId/branches/:branchId/rooms/:roomId/status", authorize("owner", "branch_manager", "receptionist", "housekeeping", "accountant"), updateRoomStatus);
 router.delete("/hotels/:hotelId/branches/:branchId/rooms/:roomId", authorize("owner", "branch_manager"), deleteRoom);
 
 // 🛏️ Get All Rooms (for branch managers to see all available rooms)
-router.get("/all-rooms", authorize("super_admin", "owner", "branch_manager", "receptionist", "housekeeping"), getAllRooms);
+router.get("/all-rooms", authorize("super_admin", "owner", "branch_manager", "receptionist", "housekeeping", "accountant"), getAllRooms);
 
 // 🛏️ Get All Rooms for Hotel (for housekeeping to see all rooms across branches)
-router.get("/hotels/:hotelId/rooms/all", authorize("super_admin", "owner", "branch_manager", "receptionist", "housekeeping"), getAllRooms);
+router.get("/hotels/:hotelId/rooms/all", authorize("super_admin", "owner", "branch_manager", "receptionist", "housekeeping", "accountant"), getAllRooms);
 
 // 🛏️ Get Rooms by Branch ID (for branch dashboard)
-router.get("/branches/:branchId/rooms", authorize("super_admin", "owner", "branch_manager", "receptionist", "housekeeping"), getRooms);
+router.get("/branches/:branchId/rooms", authorize("super_admin", "owner", "branch_manager", "receptionist", "housekeeping", "accountant"), getRooms);
 
 export default router;

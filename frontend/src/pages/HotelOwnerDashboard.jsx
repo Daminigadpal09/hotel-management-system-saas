@@ -9,6 +9,7 @@ import {
 } from "../services/api.js";
 
 export default function HotelOwnerDashboard() {
+  console.log("HotelOwnerDashboard component rendered!");
   const [hotels, setHotels] = useState([]);
   const [hotelsWithRooms, setHotelsWithRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -66,6 +67,11 @@ export default function HotelOwnerDashboard() {
   const [selectedBill, setSelectedBill] = useState(null);
   const [showBillDetails, setShowBillDetails] = useState(false);
   const [showEditBill, setShowEditBill] = useState(false);
+
+  // Payment Management State
+  const [allPayments, setAllPayments] = useState([]);
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const [billingTab, setBillingTab] = useState("invoices"); // 'invoices' or 'payments'
 
   // Branch Management State
   const [allBranches, setAllBranches] = useState([]);
@@ -575,13 +581,27 @@ export default function HotelOwnerDashboard() {
 
   const fetchAllBills = async () => {
     try {
-      const { billingAPI } = await import("../services/api.js");
+      console.log("fetchAllBills called");
       const data = await billingAPI.getInvoices({ limit: 1000 });
+      console.log("Fetched bills response:", data);
       console.log("Fetched bills:", data.data || data);
       setAllBills(data.data || data);
     } catch (error) {
       console.error("Error fetching bills:", error);
       setAllBills([]);
+    }
+  };
+
+  const fetchAllPayments = async () => {
+    try {
+      console.log("fetchAllPayments called");
+      const data = await billingAPI.getPayments({ limit: 1000 });
+      console.log("Fetched payments response:", data);
+      console.log("Fetched payments:", data.data || data);
+      setAllPayments(data.data || data);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+      setAllPayments([]);
     }
   };
 
@@ -758,10 +778,13 @@ export default function HotelOwnerDashboard() {
   }, [hotels, bookings]);
 
   useEffect(() => {
+    console.log("Active view changed to:", activeView);
     if (activeView === "guests") {
       fetchAllGuests();
     } else if (activeView === "billing") {
+      console.log("Fetching billing data...");
       fetchAllBills();
+      fetchAllPayments();
     } else if (activeView === "hotels") {
       fetchHotels();
     } else if (activeView === "branches") {
@@ -964,7 +987,7 @@ export default function HotelOwnerDashboard() {
                     activeView === "billing" ? "dashboard" : "billing",
                   );
                 }}
-                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer ${
                   activeView === "billing"
                     ? "bg-purple-50 text-purple-700"
                     : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
@@ -1895,240 +1918,405 @@ export default function HotelOwnerDashboard() {
                     <div className="bg-white rounded-lg shadow">
                       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                         <div>
-                          <h2 className="text-xl font-semibold text-gray-900">
-                            Billing & Payments
-                          </h2>
-                          <p className="text-sm text-gray-500">
-                            Manage all billing and payments
-                          </p>
+                          <h2 className="text-xl font-semibold text-gray-900">Billing & Payments</h2>
+                          <p className="text-sm text-gray-500">Manage all invoices and guest payments</p>
                         </div>
-                        <button
-                          onClick={() => setActiveView("dashboard")}
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium"
-                        >
+                        <button onClick={() => setActiveView("dashboard")} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium">
                           ← Back to Dashboard
                         </button>
                       </div>
 
-                      {/* Billing Filters */}
+                      {/* Billing Tabs */}
                       <div className="px-6 py-4 border-b border-gray-200">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => setBillingFilter("all")}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md ${
-                              billingFilter === "all"
-                                ? "bg-purple-100 text-purple-700"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            All ({allBills.length})
+                        <div className="flex gap-4">
+                          <button onClick={() => setBillingTab("invoices")} className={`px-4 py-2 text-sm font-medium rounded-md ${billingTab === "invoices" ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                            Invoices ({allBills.length})
                           </button>
-                          <button
-                            onClick={() => setBillingFilter("pending")}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md ${
-                              billingFilter === "pending"
-                                ? "bg-orange-100 text-orange-700"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            Pending (
-                            {
-                              allBills.filter((b) => b.status === "pending")
-                                .length
-                            }
-                            )
-                          </button>
-                          <button
-                            onClick={() => setBillingFilter("paid")}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md ${
-                              billingFilter === "paid"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            Paid (
-                            {allBills.filter((b) => b.status === "paid").length}
-                            )
-                          </button>
-                          <button
-                            onClick={() => setBillingFilter("overdue")}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md ${
-                              billingFilter === "overdue"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            Overdue (
-                            {
-                              allBills.filter((b) => b.status === "overdue")
-                                .length
-                            }
-                            )
+                          <button onClick={() => { setBillingTab("payments"); fetchAllPayments(); }} className={`px-4 py-2 text-sm font-medium rounded-md ${billingTab === "payments" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                            Payments ({allPayments.length})
                           </button>
                         </div>
                       </div>
 
-                      {/* Billing Content */}
+                      {/* Content */}
                       <div className="p-6">
-                        <div className="flex justify-between items-center mb-4">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => {
-                                setShowAddBill(true);
-                                fetchAllBills();
-                              }}
-                              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm font-medium"
-                            >
-                              + New Bill
-                            </button>
-                          </div>
-                        </div>
-
-                        {allBills.length === 0 ? (
-                          <div className="text-center py-12">
-                            <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                              <svg
-                                className="w-8 h-8 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 4.077a1 1 0 01-1.123.606l-2.257-4.077a1 1 0 01-.502-1.21L7.228 3.684A1 1 0 018.172 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5z"
-                                />
-                              </svg>
+                        {billingTab === "invoices" ? (
+                          allBills.length === 0 ? (
+                            <div className="text-center py-12">
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">No invoices yet</h3>
+                              <p className="text-gray-500">Create your first invoice to get started.</p>
                             </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">
-                              No bills yet
-                            </h3>
-                            <p className="text-gray-500 mb-4">
-                              Create your first bill to get started.
-                            </p>
-                            <button
-                              onClick={() => {
-                                setShowAddBill(true);
-                                fetchAllBills();
-                              }}
-                              className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 font-medium"
-                            >
-                              Create First Bill
-                            </button>
-                          </div>
-                        ) : (
-                          <>
-                            {/* Debug info */}
-                            <div className="mb-4 p-2 bg-gray-100 text-xs">
-                              Debug: Found {allBills.length} bills in database
-                            </div>
-
+                          ) : (
                             <div className="overflow-x-auto">
                               <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                   <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Bill ID
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Guest
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Amount
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Due Date
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                      Actions
-                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guest</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                                   </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                  {allBills
-                                    .filter(
-                                      (b) =>
-                                        billingFilter === "all" ||
-                                        b.status === billingFilter,
-                                    )
-                                    .map((bill, index) => (
-                                      <tr
-                                        key={bill._id || index}
-                                        className="hover:bg-gray-50"
-                                      >
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                          <div className="text-sm font-medium text-gray-900">
-                                            #{bill._id?.slice(-6) || "N/A"}
-                                          </div>
-                                          <div className="text-sm text-gray-500">
-                                            Booking:{" "}
-                                            {bill.bookingId?.slice(-6) || "N/A"}
-                                          </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                          <div className="text-sm font-medium text-gray-900">
-                                            {bill.guestName || "Unknown Guest"}
-                                          </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                          <div className="text-sm font-bold text-gray-900">
-                                            ${bill.amount || 0}
-                                          </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                          {new Date(
-                                            bill.dueDate,
-                                          ).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                          <span
-                                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                              bill.status === "paid"
-                                                ? "bg-green-100 text-green-800"
-                                                : bill.status === "pending"
-                                                  ? "bg-orange-100 text-orange-800"
-                                                  : bill.status === "overdue"
-                                                    ? "bg-red-100 text-red-800"
-                                                    : "bg-gray-100 text-gray-800"
-                                            }`}
-                                          >
-                                            {bill.status || "unknown"}
-                                          </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                          <div className="flex space-x-2">
-                                            <button
-                                              onClick={() => {
-                                                setSelectedBill(bill);
-                                                setShowBillDetails(true);
-                                              }}
-                                              className="text-blue-600 hover:text-blue-900"
-                                            >
-                                              View
-                                            </button>
-                                            <button
-                                              onClick={() => {
-                                                setSelectedBill(bill);
-                                                setShowEditBill(true);
-                                              }}
-                                              className="text-green-600 hover:text-green-900"
-                                            >
-                                              Edit
-                                            </button>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    ))}
+                                  {allBills.map((bill) => (
+                                    <tr key={bill._id} className="hover:bg-gray-50">
+                                      <td className="px-6 py-4">{bill.invoiceNumber || `#${bill._id ? String(bill._id).slice(-8) : 'N/A'}`}</td>
+                                      <td className="px-6 py-4">{bill.guestId?.name || bill.guestName || 'Unknown'}</td>
+                                      <td className="px-6 py-4 font-bold">${(bill.totalAmount || bill.amount || 0).toLocaleString()}</td>
+                                      <td className="px-6 py-4">
+                                        <span className={`px-2 py-1 rounded-full text-xs ${bill.status === 'paid' ? 'bg-green-100 text-green-800' : bill.status === 'pending' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'}`}>
+                                          {bill.status || 'unknown'}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-4 text-gray-500">{bill.createdAt ? new Date(bill.createdAt).toLocaleDateString() : 'N/A'}</td>
+                                    </tr>
+                                  ))}
                                 </tbody>
                               </table>
                             </div>
-                          </>
+                          )
+                        ) : (
+                          allPayments.length === 0 ? (
+                            <div className="text-center py-12">
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">No payments yet</h3>
+                              <p className="text-gray-500">Guest payments will appear here.</p>
+                            </div>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment ID</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guest</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {allPayments.map((payment) => (
+                                    <tr key={payment._id} className="hover:bg-gray-50">
+                                      <td className="px-6 py-4">#{payment._id ? String(payment._id).slice(-8) : 'N/A'}</td>
+                                      <td className="px-6 py-4">{payment.guestId?.name || payment.guestName || 'Unknown'}</td>
+                                      <td className="px-6 py-4 font-bold">${(payment.amount || 0).toLocaleString()}</td>
+                                      <td className="px-6 py-4">
+                                        <span className={`px-2 py-1 rounded-full text-xs ${payment.status === 'completed' ? 'bg-green-100 text-green-800' : payment.status === 'pending' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'}`}>
+                                          {payment.status || 'unknown'}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-4 text-gray-500">{payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'N/A'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )
                         )}
                       </div>
+                    </div>
+                  ) : activeView === "hotels" ? (
+                            className={`px-4 py-2 text-sm font-medium rounded-md ${
+                              billingTab === "invoices"
+                                ? "bg-purple-600 text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              Invoices ({allBills.length})
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setBillingTab("payments");
+                              fetchAllPayments();
+                            }}
+                            className={`px-4 py-2 text-sm font-medium rounded-md ${
+                              billingTab === "payments"
+                                ? "bg-green-600 text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                              Payments ({allPayments.length})
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Invoices Tab Content */}
+                      {billingTab === "invoices" && (
+                        <>
+                          {/* Invoice Filters */}
+                          <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                onClick={() => setBillingFilter("all")}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                                  billingFilter === "all"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}
+                              >
+                                All ({allBills.length})
+                              </button>
+                              <button
+                                onClick={() => setBillingFilter("pending")}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                                  billingFilter === "pending"
+                                    ? "bg-orange-100 text-orange-700"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}
+                              >
+                                Pending (
+                                {
+                                  allBills.filter((b) => b.status === "pending")
+                                    .length
+                                }
+                                )
+                              </button>
+                              <button
+                                onClick={() => setBillingFilter("paid")}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                                  billingFilter === "paid"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}
+                              >
+                                Paid (
+                                {allBills.filter((b) => b.status === "paid").length}
+                                )
+                              </button>
+                              <button
+                                onClick={() => setBillingFilter("overdue")}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                                  billingFilter === "overdue"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}
+                              >
+                                Overdue (
+                                {
+                                  allBills.filter((b) => b.status === "overdue")
+                                    .length
+                                }
+                                )
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Invoice Content */}
+                          <div className="p-6">
+                            <div className="flex justify-between items-center mb-4">
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => {
+                                    setShowAddBill(true);
+                                    fetchAllBills();
+                                  }}
+                                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm font-medium"
+                                >
+                                  + New Invoice
+                                </button>
+                              </div>
+                            </div>
+
+                            {allBills.length === 0 ? (
+                              <div className="text-center py-12">
+                                <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">No invoices yet</h3>
+                                <p className="text-gray-500 mb-4">Create your first invoice to get started.</p>
+                                <button onClick={() => { setShowAddBill(true); fetchAllBills(); }} className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 font-medium">
+                                  Create First Invoice
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                {/* Invoice Summary Stats */}
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                  <div className="bg-purple-50 p-4 rounded-lg">
+                                    <div className="text-sm text-purple-600 font-medium">Total Invoices</div>
+                                    <div className="text-2xl font-bold text-purple-900">{allBills.length}</div>
+                                  </div>
+                                  <div className="bg-orange-50 p-4 rounded-lg">
+                                    <div className="text-sm text-orange-600 font-medium">Pending Amount</div>
+                                    <div className="text-2xl font-bold text-orange-900">
+                                      ${allBills.filter(b => b.status === 'pending').reduce((sum, b) => sum + (b.totalAmount || b.amount || 0), 0).toLocaleString()}
+                                    </div>
+                                  </div>
+                                  <div className="bg-green-50 p-4 rounded-lg">
+                                    <div className="text-sm text-green-600 font-medium">Paid Amount</div>
+                                    <div className="text-2xl font-bold text-green-900">
+                                      ${allBills.filter(b => b.status === 'paid').reduce((sum, b) => sum + (b.totalAmount || b.amount || 0), 0).toLocaleString()}
+                                    </div>
+                                  </div>
+                                  <div className="bg-red-50 p-4 rounded-lg">
+                                    <div className="text-sm text-red-600 font-medium">Overdue Amount</div>
+                                    <div className="text-2xl font-bold text-red-900">
+                                      ${allBills.filter(b => b.status === 'overdue').reduce((sum, b) => sum + (b.totalAmount || b.amount || 0), 0).toLocaleString()}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                  <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                      <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice #</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                      {allBills.filter((b) => billingFilter === "all" || b.status === billingFilter).map((bill, index) => (
+                                        <tr key={bill._id || index} className="hover:bg-gray-50">
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{bill.invoiceNumber || `#${bill._id ? String(bill._id).slice(-8) : "N/A"}`}</div>
+                                            <div className="text-xs text-gray-500">Booking: {bill.bookingId ? String(bill.bookingId).slice(-6) : "N/A"}</div>
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{bill.guestId?.name || bill.guestName || "Unknown Guest"}</div>
+                                            <div className="text-xs text-gray-500">{bill.guestId?.email || ""}</div>
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bill.branchId?.name || bill.branchId?.city || "N/A"}</td>
+                                          <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-bold text-gray-900">${(bill.totalAmount || bill.amount || 0).toLocaleString()}</div></td>
+                                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : "N/A"}</td>
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                              bill.status === "paid" ? "bg-green-100 text-green-800" :
+                                              bill.status === "pending" ? "bg-orange-100 text-orange-800" :
+                                              bill.status === "overdue" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}`}>
+                                              {bill.status || "unknown"}
+                                            </span>
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{bill.createdAt ? new Date(bill.createdAt).toLocaleDateString() : "N/A"}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      )}
+
+                      {/* Payments Tab Content */}
+                      {billingTab === "payments" && (
+                        <>
+                          {/* Payment Filters */}
+                          <div className="px-6 py-4 border-b border-gray-200">
+                            <div className="flex flex-wrap gap-2">
+                              <button onClick={() => setPaymentFilter("all")} className={`px-3 py-1.5 text-sm font-medium rounded-md ${paymentFilter === "all" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                                All ({allPayments.length})
+                              </button>
+                              <button onClick={() => setPaymentFilter("completed")} className={`px-3 py-1.5 text-sm font-medium rounded-md ${paymentFilter === "completed" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                                Completed ({allPayments.filter((p) => p.status === "completed").length})
+                              </button>
+                              <button onClick={() => setPaymentFilter("pending")} className={`px-3 py-1.5 text-sm font-medium rounded-md ${paymentFilter === "pending" ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                                Pending ({allPayments.filter((p) => p.status === "pending").length})
+                              </button>
+                              <button onClick={() => setPaymentFilter("failed")} className={`px-3 py-1.5 text-sm font-medium rounded-md ${paymentFilter === "failed" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                                Failed ({allPayments.filter((p) => p.status === "failed").length})
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Payment Content */}
+                          <div className="p-6">
+                            {allPayments.length === 0 ? (
+                              <div className="text-center py-12">
+                                <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                  </svg>
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">No payments yet</h3>
+                                <p className="text-gray-500">Guest payments will appear here.</p>
+                              </div>
+                            ) : (
+                              <>
+                                {/* Payment Summary Stats */}
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                  <div className="bg-green-50 p-4 rounded-lg">
+                                    <div className="text-sm text-green-600 font-medium">Total Payments</div>
+                                    <div className="text-2xl font-bold text-green-900">{allPayments.length}</div>
+                                  </div>
+                                  <div className="bg-blue-50 p-4 rounded-lg">
+                                    <div className="text-sm text-blue-600 font-medium">Completed</div>
+                                    <div className="text-2xl font-bold text-blue-900">{allPayments.filter(p => p.status === 'completed').length}</div>
+                                  </div>
+                                  <div className="bg-orange-50 p-4 rounded-lg">
+                                    <div className="text-sm text-orange-600 font-medium">Pending</div>
+                                    <div className="text-2xl font-bold text-orange-900">{allPayments.filter(p => p.status === 'pending').length}</div>
+                                  </div>
+                                  <div className="bg-purple-50 p-4 rounded-lg">
+                                    <div className="text-sm text-purple-600 font-medium">Total Amount</div>
+                                    <div className="text-2xl font-bold text-purple-900">${allPayments.reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString()}</div>
+                                  </div>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                  <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                      <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment ID</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                      {allPayments.filter((p) => paymentFilter === "all" || p.status === paymentFilter).map((payment, index) => (
+                                        <tr key={payment._id || index} className="hover:bg-gray-50">
+                                          <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium text-gray-900">#{payment._id?.slice(-8) || "N/A"}</div></td>
+                                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.invoiceId?.invoiceNumber || "N/A"}</td>
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{payment.guestId?.name || payment.guestName || "Unknown"}</div>
+                                            <div className="text-xs text-gray-500">{payment.guestId?.email || ""}</div>
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.branchId?.name || payment.branchId?.city || "N/A"}</td>
+                                          <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-bold text-gray-900">${(payment.amount || 0).toLocaleString()}</div></td>
+                                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{payment.paymentMethod || payment.method || "N/A"}</td>
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                              payment.status === "completed" ? "bg-green-100 text-green-800" :
+                                              payment.status === "pending" ? "bg-orange-100 text-orange-800" :
+                                              payment.status === "failed" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}`}>
+                                              {payment.status || "unknown"}
+                                            </span>
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : "N/A"}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
                   ) : activeView === "hotels" ? (
                     /* ── MY HOTELS VIEW ─────────────────────────────────── */
