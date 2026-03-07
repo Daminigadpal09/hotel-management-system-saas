@@ -12,9 +12,9 @@ export default function SuperAdminDashboard() {
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [error, setError] = useState(null);
   const [subscriptionForm, setSubscriptionForm] = useState({
-    plan: "free",
-    maxBranches: 1,
-    maxUsers: 5,
+    plan: "basic",
+    maxBranches: 2,
+    maxUsers: 10,
     expiryDays: 30
   });
   const navigate = useNavigate();
@@ -242,10 +242,17 @@ export default function SuperAdminDashboard() {
 
   const openSubscriptionModal = (hotel) => {
     setSelectedHotel(hotel);
+    // Get the hotel's current subscription plan
+    const currentPlan = hotel.subscription_plan || hotel.subscription?.plan || "free";
+    const currentMaxBranches = hotel.max_branches || hotel.subscription?.maxBranches || 2;
+    const currentMaxUsers = hotel.max_users || hotel.subscription?.maxUsers || 10;
+    const currentExpiryDays = hotel.subscription?.expiryDays || 30;
+    
     setSubscriptionForm({
-      plan: hotel.subscription_plan || "free",
-      maxUsers: hotel.max_users || 5,
-      expiryDays: 30
+      plan: currentPlan,
+      maxBranches: currentMaxBranches,
+      maxUsers: currentMaxUsers,
+      expiryDays: currentExpiryDays
     });
     setShowSubscriptionModal(true);
   };
@@ -327,22 +334,29 @@ export default function SuperAdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md text-center">
-          <div className="text-red-500 text-5xl mb-4">&#9888;</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+        <div className="bg-white p-10 rounded-2xl shadow-xl shadow-slate-200/50 text-center border border-slate-100">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Access Denied</h2>
+          <p className="text-slate-500 mb-6">{error}</p>
           <button
             onClick={() => navigate("/dashboard")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-lg shadow-amber-500/25"
           >
             Go to Dashboard
           </button>
@@ -352,17 +366,29 @@ export default function SuperAdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <nav className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200/50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Super Admin Dashboard</h1>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-800">Super Admin Dashboard</h1>
+                <p className="text-xs text-slate-500">System management & control</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="text-sm text-gray-600 hover:text-gray-800">Home</Link>
-              <span className="text-sm text-gray-600">Super Admin</span>
-              <button onClick={handleLogout} className="px-4 py-2 text-sm text-red-600 hover:text-red-800">
+            <div className="flex items-center gap-4">
+              <Link to="/" className="text-sm text-slate-600 hover:text-slate-800 font-medium px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors">Home</Link>
+              <span className="text-sm text-slate-500">|</span>
+              <span className="text-sm font-medium text-slate-600 px-3 py-2 bg-slate-100 rounded-lg">Super Admin</span>
+              <button onClick={handleLogout} className="px-4 py-2 text-sm font-medium text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4 4m4-4H3m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
                 Logout
               </button>
             </div>
@@ -374,39 +400,43 @@ export default function SuperAdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex">
           {/* Vertical Navigation Sidebar */}
-          <div className="w-64 flex-shrink-0 bg-white border-r">
+          <div className="w-64 flex-shrink-0 bg-white border-r border-slate-200/50">
             <div className="p-4">
               <nav className="space-y-1">
                 <button
                   onClick={() => setActiveTab("overview")}
-                  className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                     activeTab === "overview"
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 border-l-2 border-amber-500"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                   }`}
                 >
-                  <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${activeTab === "overview" ? 'bg-amber-500/20' : 'bg-slate-100'}`}>
+                    <svg className={`w-5 h-5 ${activeTab === "overview" ? 'text-amber-600' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                  </div>
                   Overview
                 </button>
                 
                 <button
                   onClick={() => setActiveTab("hotels")}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg ${
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                     activeTab === "hotels"
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 border-l-2 border-amber-500"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                   }`}
                 >
-                  <div className="flex items-center">
-                    <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${activeTab === "hotels" ? 'bg-amber-500/20' : 'bg-slate-100'}`}>
+                      <svg className={`w-5 h-5 ${activeTab === "hotels" ? 'text-amber-600' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
                     Hotels
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    activeTab === "hotels" ? "bg-blue-200 text-blue-800" : "bg-gray-100 text-gray-600"
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                    activeTab === "hotels" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600"
                   }`}>
                     {hotels.length}
                   </span>
@@ -414,20 +444,22 @@ export default function SuperAdminDashboard() {
                 
                 <button
                   onClick={() => setActiveTab("users")}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg ${
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                     activeTab === "users"
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 border-l-2 border-amber-500"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                   }`}
                 >
-                  <div className="flex items-center">
-                    <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${activeTab === "users" ? 'bg-amber-500/20' : 'bg-slate-100'}`}>
+                      <svg className={`w-5 h-5 ${activeTab === "users" ? 'text-amber-600' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
                     Users
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    activeTab === "users" ? "bg-blue-200 text-blue-800" : "bg-gray-100 text-gray-600"
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                    activeTab === "users" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600"
                   }`}>
                     {users.length}
                   </span>
@@ -435,20 +467,22 @@ export default function SuperAdminDashboard() {
                 
                 <button
                   onClick={() => setActiveTab("subscriptions")}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg ${
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                     activeTab === "subscriptions"
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 border-l-2 border-amber-500"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                   }`}
                 >
-                  <div className="flex items-center">
-                    <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${activeTab === "subscriptions" ? 'bg-amber-500/20' : 'bg-slate-100'}`}>
+                      <svg className={`w-5 h-5 ${activeTab === "subscriptions" ? 'text-amber-600' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                    </div>
                     Subscriptions
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    activeTab === "subscriptions" ? "bg-blue-200 text-blue-800" : "bg-gray-100 text-gray-600"
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                    activeTab === "subscriptions" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600"
                   }`}>
                     SaaS
                   </span>
@@ -459,35 +493,97 @@ export default function SuperAdminDashboard() {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-6 bg-gradient-to-br from-slate-50 via-white to-slate-100 min-h-screen">
           {/* Overview Tab */}
           {activeTab === "overview" && analytics && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-sm font-medium text-gray-500">Total Hotels</h3>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{analytics.hotels.total}</p>
-                <div className="mt-2 text-sm">
-                  <p className="text-green-600">Active: {analytics.hotels.active}</p>
-                  <p className="text-yellow-600">Pending: {analytics.hotels.pending}</p>
-                  <p className="text-red-600">Suspended: {analytics.hotels.suspended}</p>
+            <div className="space-y-6">
+              {/* KPI Cards Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Hotels</p>
+                      <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">{analytics.hotels.total}</p>
+                    </div>
+                    <div className="w-11 h-11 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-emerald-600 font-medium">Active: {analytics.hotels.active}</span>
+                      <span className="text-amber-600 font-medium">Pending: {analytics.hotels.pending}</span>
+                      <span className="text-red-600 font-medium">Suspended: {analytics.hotels.suspended}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-sm font-medium text-gray-500">Total Users</h3>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{analytics.users.total}</p>
-                <div className="mt-2 text-sm">
-                  <p className="text-green-600">Active: {analytics.users.active}</p>
-                  <p className="text-gray-500">Inactive: {analytics.users.inactive || 0}</p>
+
+                <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Users</p>
+                      <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">{analytics.users.total}</p>
+                    </div>
+                    <div className="w-11 h-11 bg-gradient-to-br from-cyan-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-emerald-600 font-medium">Active: {analytics.users.active}</span>
+                      <span className="text-slate-500">Inactive: {analytics.users.inactive || 0}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-sm font-medium text-gray-500">Monthly Revenue</h3>
-                <p className="text-3xl font-bold text-gray-900 mt-2">${analytics.revenue.monthly}</p>
-                <div className="mt-2 text-xs text-gray-500">
-                  <p>Free: {analytics.revenue.subscriptions?.free || 0}</p>
-                  <p>Basic ($29): {analytics.revenue.subscriptions?.basic || 0}</p>
-                  <p>Premium ($99): {analytics.revenue.subscriptions?.premium || 0}</p>
-                  <p>Enterprise ($299): {analytics.revenue.subscriptions?.enterprise || 0}</p>
+
+                <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Monthly Revenue</p>
+                      <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">${analytics.revenue.monthly}</p>
+                    </div>
+                    <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>Free: {analytics.revenue.subscriptions?.free || 0}</span>
+                      <span>Basic ($29): {analytics.revenue.subscriptions?.basic || 0}</span>
+                      <span>Premium ($99): {analytics.revenue.subscriptions?.premium || 0}</span>
+                      <span>Enterprise ($299): {analytics.revenue.subscriptions?.enterprise || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Revenue</p>
+                      <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">${analytics.revenue.total}</p>
+                    </div>
+                    <div className="w-11 h-11 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                        </svg>
+                        +12% this month
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -495,12 +591,28 @@ export default function SuperAdminDashboard() {
 
           {/* Hotels Tab */}
           {activeTab === "hotels" && (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">All Hotels ({hotels.length})</h2>
-                <div className="text-sm text-gray-500">
-                  Total: {hotels.length} hotels in database
+            <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100">
+              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-800">All Hotels</h2>
+                    <p className="text-xs text-slate-500">{hotels.length} hotels in database</p>
+                  </div>
                 </div>
+                <button
+                  onClick={handleRefreshHotels}
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-lg shadow-amber-500/25 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
               </div>
               {hotels.length === 0 ? (
                 <div className="text-center py-8">
@@ -577,25 +689,28 @@ export default function SuperAdminDashboard() {
 
           {/* Users Tab */}
           {activeTab === "users" && (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">All Users ({users.length})</h2>
-                  <div className="text-sm text-gray-500">
-                    Total: {users.length} users in database
+            <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100">
+              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-800">All Users</h2>
+                    <p className="text-xs text-slate-500">{users.length} users in database</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button 
-                    onClick={handleRefreshUsers}
-                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
-                  >
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Refresh Users
-                  </button>
-                </div>
+                <button 
+                  onClick={handleRefreshUsers}
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-lg shadow-amber-500/25 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh Users
+                </button>
               </div>
               
               {users.length === 0 ? (
@@ -652,74 +767,6 @@ export default function SuperAdminDashboard() {
       </div>
       </div>
 
-      {/* Subscription Modal */}
-      {showSubscriptionModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Update Subscription - {selectedHotel?.name}
-            </h3>
-            <form onSubmit={handleUpdateSubscription}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subscription Plan</label>
-                <select
-                  value={subscriptionForm.plan}
-                  onChange={(e) => setSubscriptionForm({ ...subscriptionForm, plan: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="free">Free - $0/month</option>
-                  <option value="basic">Basic - $29/month</option>
-                  <option value="premium">Premium - $99/month</option>
-                  <option value="enterprise">Enterprise - $299/month</option>
-                </select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Branches</label>
-                <input
-                  type="number"
-                  value={subscriptionForm.maxBranches}
-                  onChange={(e) => setSubscriptionForm({ ...subscriptionForm, maxBranches: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="1"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Users</label>
-                <input
-                  type="number"
-                  value={subscriptionForm.maxUsers}
-                  onChange={(e) => setSubscriptionForm({ ...subscriptionForm, maxUsers: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="1"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subscription Duration (days)</label>
-                <input
-                  type="number"
-                  value={subscriptionForm.expiryDays}
-                  onChange={(e) => setSubscriptionForm({ ...subscriptionForm, expiryDays: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="1"
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowSubscriptionModal(false)}
-                  className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                  Update Subscription
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
           {/* Subscriptions Tab - SaaS Management */}
           {activeTab === "subscriptions" && (
             <div className="space-y-6">
@@ -740,6 +787,77 @@ export default function SuperAdminDashboard() {
                     Create Plan
                   </button>
                 </div>
+
+                {/* Subscription Modal - Inline */}
+                {showSubscriptionModal && (
+                  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+                      <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
+                        <h3 className="text-lg font-bold text-white">
+                          Update Subscription
+                        </h3>
+                        <p className="text-amber-100 text-sm">{selectedHotel?.name}</p>
+                      </div>
+                      <form onSubmit={handleUpdateSubscription} className="p-6">
+                        <div className="mb-4">
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Subscription Plan</label>
+                          <select
+                            value={subscriptionForm.plan}
+                            onChange={(e) => setSubscriptionForm({ ...subscriptionForm, plan: e.target.value })}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          >
+                            <option value="free">Free - $0/month</option>
+                            <option value="basic">Standard - $29/month</option>
+                            <option value="premium">Premium - $99/month</option>
+                            <option value="enterprise">Enterprise - $299/month</option>
+                          </select>
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Max Branches</label>
+                          <input
+                            type="number"
+                            value={subscriptionForm.maxBranches}
+                            onChange={(e) => setSubscriptionForm({ ...subscriptionForm, maxBranches: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            min="1"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Max Users</label>
+                          <input
+                            type="number"
+                            value={subscriptionForm.maxUsers}
+                            onChange={(e) => setSubscriptionForm({ ...subscriptionForm, maxUsers: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            min="1"
+                          />
+                        </div>
+                        <div className="mb-6">
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Subscription Duration (days)</label>
+                          <input
+                            type="number"
+                            value={subscriptionForm.expiryDays}
+                            onChange={(e) => setSubscriptionForm({ ...subscriptionForm, expiryDays: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            min="1"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowSubscriptionModal(false)}
+                            className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button type="submit" className="px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/25">
+                            Update Subscription
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
 
                 {/* Subscription Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

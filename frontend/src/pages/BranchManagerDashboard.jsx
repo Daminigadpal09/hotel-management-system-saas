@@ -481,8 +481,11 @@ export default function BranchManagerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -490,25 +493,36 @@ export default function BranchManagerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Horizontal Navbar */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200/50">
         <div className="px-6 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">Branch Manager Dashboard</h1>
-              {selectedHotel && (
-                <p className="text-sm text-gray-600 mt-1">
-                  Hotel: {selectedHotel.name}
-                </p>
-              )}
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Branch Manager Dashboard</h1>
+                {selectedHotel && (
+                  <p className="text-xs text-slate-500 font-medium">
+                    🏨 {selectedHotel.name}
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                Welcome, {user?.name || 'User'}
-              </span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full">
+                <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                  {user?.name?.charAt(0) || 'U'}
+                </div>
+                <span className="text-sm font-medium text-slate-700">
+                  {user?.name || 'User'}
+                </span>
+              </div>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2"
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                 Logout
               </button>
             </div>
@@ -518,20 +532,20 @@ export default function BranchManagerDashboard() {
 
       <div className="flex">
         {/* Vertical Sidebar */}
-        <div className="w-64 bg-white shadow-md">
-          <div className="p-4">
-            <h2 className="text-lg font-medium text-gray-700">Navigation</h2>
+        <div className="w-64 bg-gradient-to-b from-slate-800 to-slate-900 shadow-2xl">
+          <div className="p-4 border-b border-slate-700/50">
+            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Menu</h2>
           </div>
         
         {/* Navigation */}
-        <nav className="mt-6">
-          <div className="px-4 py-2">
+        <nav className="mt-4 px-3">
+          <div className="space-y-1">
             <div 
               onClick={() => setActiveSection('overview')}
-              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+              className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer ${
                 activeSection === 'overview' 
-                  ? 'text-white bg-indigo-600' 
-                  : 'text-gray-700 bg-gray-50'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' 
+                  : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
               }`}
             >
               <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -541,10 +555,10 @@ export default function BranchManagerDashboard() {
             </div>
           </div>
           
-          <div className="px-4 py-2">
+          <div className="mt-4 space-y-1">
             <button
               onClick={() => setShowBookingForm(true)}
-              className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 mb-2"
+              className="w-full group flex items-center px-4 py-3 text-sm font-medium rounded-xl text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-lg shadow-amber-500/25"
             >
               <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -556,10 +570,10 @@ export default function BranchManagerDashboard() {
           <div className="px-4 py-2">
             <div 
               onClick={() => setActiveSection('rooms')}
-              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+              className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer ${
                 activeSection === 'rooms' 
-                  ? 'text-white bg-indigo-600' 
-                  : 'text-gray-700 bg-gray-50'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' 
+                  : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
               }`}
             >
               <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -569,16 +583,16 @@ export default function BranchManagerDashboard() {
             </div>
           </div>
           
-          <div className="px-4 py-2">
+          <div className="mt-1 space-y-1">
             <div 
               onClick={() => setActiveSection('bookings')}
-              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+              className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer ${
                 activeSection === 'bookings' 
-                  ? 'text-white bg-indigo-600' 
-                  : 'text-gray-700 bg-gray-50'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' 
+                  : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
               }`}
             >
-              <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v7a2 2 0 002 2z" />
               </svg>
               Booking Management
@@ -588,11 +602,19 @@ export default function BranchManagerDashboard() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-gray-50">
+      <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Hotel and Branch Selection */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Hotel & Branch Selection</h2>
+          <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 p-6 mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">Hotel & Branch Selection</h2>
+                <p className="text-xs text-slate-500">Choose your hotel and branch to manage</p>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Select Hotel</label>
@@ -648,33 +670,95 @@ export default function BranchManagerDashboard() {
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-xs font-medium text-gray-500">Total Rooms</h3>
-              <p className="text-2xl font-bold text-gray-900">{totalRooms}</p>
+            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Rooms</p>
+                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">{rooms.length}</p>
+                </div>
+                <div className="w-11 h-11 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                </div>
+              </div>
+              <p className="text-xs text-blue-600 mt-2 font-medium">All rooms</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-xs font-medium text-gray-500">Occupied</h3>
-              <p className="text-2xl font-bold text-gray-900">{occupiedRooms}</p>
+
+            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Available</p>
+                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">{availableRooms}</p>
+                </div>
+                <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </div>
+              </div>
+              <p className="text-xs text-emerald-600 mt-2 font-medium">Ready to book</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-xs font-medium text-gray-500">Available</h3>
-              <p className="text-2xl font-bold text-gray-900">{availableRooms}</p>
+
+            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Occupied</p>
+                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">{occupiedRooms}</p>
+                </div>
+                <div className="w-11 h-11 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                </div>
+              </div>
+              <p className="text-xs text-amber-600 mt-2 font-medium">Currently in use</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-xs font-medium text-gray-500">Cleaning</h3>
-              <p className="text-2xl font-bold text-gray-900">{cleaningRooms}</p>
+
+            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Maintenance</p>
+                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">{maintenanceRooms}</p>
+                </div>
+                <div className="w-11 h-11 bg-gradient-to-br from-rose-400 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/25">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                </div>
+              </div>
+              <p className="text-xs text-rose-600 mt-2 font-medium">Under maintenance</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-xs font-medium text-gray-500">Maintenance</h3>
-              <p className="text-2xl font-bold text-gray-900">{maintenanceRooms}</p>
+
+            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Bookings</p>
+                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">{bookings.length}</p>
+                </div>
+                <div className="w-11 h-11 bg-gradient-to-br from-cyan-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                </div>
+              </div>
+              <p className="text-xs text-cyan-600 mt-2 font-medium">Total bookings</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-xs font-medium text-gray-500">Today's Revenue</h3>
-              <p className="text-2xl font-bold text-gray-900">${todayRevenue.toFixed(2)}</p>
+
+            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Today Revenue</p>
+                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">${todayRevenue}</p>
+                </div>
+                <div className="w-11 h-11 bg-gradient-to-br from-violet-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+              </div>
+              <p className="text-xs text-violet-600 mt-2 font-medium">Today's earnings</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-xs font-medium text-gray-500">Today's Bookings</h3>
-              <p className="text-2xl font-bold text-gray-900">{todayBookings}</p>
+
+            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Occupancy</p>
+                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">{rooms.length > 0 ? Math.round((occupiedRooms / rooms.length) * 100) : 0}%</p>
+                </div>
+                <div className="w-11 h-11 bg-gradient-to-br from-blue-400 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                </div>
+              </div>
+              <p className="text-xs text-blue-600 mt-2 font-medium">Room occupancy</p>
             </div>
           </div>
 

@@ -739,265 +739,303 @@ export default function HotelOwnerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-slate-50 flex">
       {/* Vertical Sidebar Navigation */}
-      <div className="w-64 bg-white shadow-lg">
-        <div className="p-6">
-          <div className="flex items-center mb-8">
-            <div className="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">H</span>
+      <div className="w-72 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl flex flex-col">
+        <div className="p-6 border-b border-slate-700/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
             </div>
-            <div className="ml-3">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Hotel Owner Dashboard
+            <div>
+              <h1 className="text-lg font-bold text-white">
+                Hotel Owner
               </h1>
-              <p className="text-sm text-gray-500">{user.name}</p>
+              <p className="text-xs text-slate-400">Dashboard</p>
             </div>
           </div>
-
-          {/* Navigation Menu */}
-          <nav className="space-y-2">
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                Main
-              </h3>
-              <Link
-                to="/owner-dashboard"
-                className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50 bg-brand-50 text-brand-700"
-              >
-                <svg
-                  className="mr-3 h-5 w-5 text-indigo-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v7a3 3 0 003 3h3a3 3 0 003-3v-7m-6 0v7a3 3 0 003 3h3a3 3 0 003-3v-7"
-                  />
-                </svg>
-                Dashboard
-              </Link>
+          
+          {/* User Info Card */}
+          <div className="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                {user.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                <p className="text-xs text-slate-400 capitalize">{user.role}</p>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                Hotel Management
-              </h3>
-              <Link
-                to="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActiveView(
-                    activeView === "hotels" ? "dashboard" : "hotels",
-                  );
-                }}
-                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeView === "hotels"
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <svg
-                  className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  />
+        {/* Navigation Menu */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3">
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-3">
+              Main Menu
+            </h3>
+            <Link
+              to="/owner-dashboard"
+              className="group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 bg-amber-500/10 text-amber-400 border-l-2 border-amber-500"
+            >
+              <div className="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v7a3 3 0 003 3h3a3 3 0 003-3v-7m-6 0v7a3 3 0 003 3h3a3 3 0 003-3v-7" />
                 </svg>
-                My Hotels
-              </Link>
+              </div>
+              Dashboard
+              <svg className="w-4 h-4 ml-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
 
-              <Link
-                to="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActiveView(
-                    activeView === "bookings" ? "dashboard" : "bookings",
-                  );
-                }}
-                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeView === "bookings"
-                    ? "bg-indigo-50 text-indigo-700"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <svg
-                  className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-3">
+              Management
+            </h3>
+            <Link
+              to="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveView(
+                  activeView === "hotels" ? "dashboard" : "hotels",
+                );
+              }}
+              className={`group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 mb-1 ${
+                activeView === "hotels"
+                  ? "bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500"
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeView === "hotels" ? 'bg-indigo-500/20' : 'bg-slate-700/50 group-hover:bg-slate-600/50'}`}>
+                <svg className={`w-5 h-5 ${activeView === "hotels" ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-                Booking Management
-              </Link>
-              <Link
-                to="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActiveView(
-                    activeView === "guests" ? "dashboard" : "guests",
-                  );
-                }}
-                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeView === "guests"
-                    ? "bg-green-50 text-green-700"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <svg
-                  className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-                Guest Management
-              </Link>
-              <Link
-                to="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActiveView(
-                    activeView === "billing" ? "dashboard" : "billing",
-                  );
-                }}
-                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeView === "billing"
-                    ? "bg-purple-50 text-purple-700"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <svg
-                  className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 4.077a1 1 0 01-1.123.606l-2.257-4.077a1 1 0 01-.502-1.21L7.228 3.684A1 1 0 018.172 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5z"
-                  />
-                </svg>
-                Billing & Payments
-              </Link>
-            </div>
+              </div>
+              My Hotels
+            </Link>
 
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                Quick Actions
-              </h3>
-            </div>
+            <Link
+              to="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveView(
+                  activeView === "bookings" ? "dashboard" : "bookings",
+                );
+              }}
+              className={`group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 mb-1 ${
+                activeView === "bookings"
+                  ? "bg-blue-500/10 text-blue-400 border-l-2 border-blue-500"
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeView === "bookings" ? 'bg-blue-500/20' : 'bg-slate-700/50 group-hover:bg-slate-600/50'}`}>
+                <svg className={`w-5 h-5 ${activeView === "bookings" ? 'text-blue-400' : 'text-slate-400 group-hover:text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              Bookings
+              <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-slate-700 text-slate-300">{bookings.length}</span>
+            </Link>
 
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                System
-              </h3>
-              <Link
-                to="/"
-                className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              >
-                <svg
-                  className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v7a3 3 0 003 3h3a3 3 0 003-3v-7m-6 0v7a3 3 0 003 3h3a3 3 0 003-3v-7"
-                  />
+            <Link
+              to="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveView(
+                  activeView === "guests" ? "dashboard" : "guests",
+                );
+              }}
+              className={`group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 mb-1 ${
+                activeView === "guests"
+                  ? "bg-emerald-500/10 text-emerald-400 border-l-2 border-emerald-500"
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeView === "guests" ? 'bg-emerald-500/20' : 'bg-slate-700/50 group-hover:bg-slate-600/50'}`}>
+                <svg className={`w-5 h-5 ${activeView === "guests" ? 'text-emerald-400' : 'text-slate-400 group-hover:text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Back to Home
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md text-red-600 hover:text-red-900 hover:bg-red-50"
-              >
-                <svg
-                  className="mr-3 h-5 w-5 text-red-400 group-hover:text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4 4m4-4H3m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
+              </div>
+              Guests
+            </Link>
+
+            <Link
+              to="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveView(
+                  activeView === "billing" ? "dashboard" : "billing",
+                );
+              }}
+              className={`group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 mb-1 ${
+                activeView === "billing"
+                  ? "bg-violet-500/10 text-violet-400 border-l-2 border-violet-500"
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeView === "billing" ? 'bg-violet-500/20' : 'bg-slate-700/50 group-hover:bg-slate-600/50'}`}>
+                <svg className={`w-5 h-5 ${activeView === "billing" ? 'text-violet-400' : 'text-slate-400 group-hover:text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
-                Logout
-              </button>
-            </div>
-          </nav>
+              </div>
+              Billing
+            </Link>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-3">
+              Quick Actions
+            </h3>
+            <button
+              onClick={() => {
+                setShowAddBooking(true);
+                fetchAllRooms();
+                fetchAllGuests();
+              }}
+              className="w-full group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 text-amber-400 hover:bg-amber-500/10 mb-1"
+            >
+              <div className="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              New Booking
+            </button>
+
+            <button
+              onClick={() => {
+                setShowAddGuest(true);
+                fetchAllGuests();
+              }}
+              className="w-full group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 text-emerald-400 hover:bg-emerald-500/10 mb-1"
+            >
+              <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+              </div>
+              Add Guest
+            </button>
+          </div>
+
+          <div className="mt-auto pt-4 border-t border-slate-700/50">
+            <Link
+              to="/"
+              className="group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 text-slate-300 hover:bg-slate-700/50 hover:text-white mb-1"
+            >
+              <div className="w-8 h-8 bg-slate-700/50 rounded-lg flex items-center justify-center group-hover:bg-slate-600/50">
+                <svg className="w-5 h-5 text-slate-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v7a3 3 0 003 3h3a3 3 0 003-3v-7m-6 0v7a3 3 0 003 3h3a3 3 0 003-3v-7" />
+                </svg>
+              </div>
+              Back to Home
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 text-red-400 hover:bg-red-500/10"
+            >
+              <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4 4m4-4H3m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              Logout
+            </button>
+          </div>
+        </nav>
+
+        {/* Sidebar Footer */}
+        <div className="p-4 border-t border-slate-700/50">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            System Online
+          </div>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200/50">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex items-center">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Hotel Management Dashboard
-                </h2>
+                <div className="flex flex-col">
+                  <h2 className="text-xl font-bold text-slate-800">
+                    Hotel Management Dashboard
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Welcome back! Here's what's happening with your hotels.
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">
-                  {new Date().toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
-                <div className="flex items-center space-x-3 pl-4 border-l">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-600">
-                      {user.name.charAt(0).toUpperCase()}
-                    </span>
+              <div className="flex items-center gap-4">
+                {/* Search */}
+                <div className="hidden md:flex items-center">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="w-64 pl-10 pr-4 py-2 bg-slate-100 border-0 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/50 focus:bg-white transition-all"
+                    />
+                    <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                   </div>
-                  <div className="hidden sm:block">
-                    <p className="text-sm font-medium text-gray-900">
+                </div>
+
+                {/* Notifications */}
+                <button className="relative p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+
+                {/* Date Display */}
+                <div className="hidden lg:flex items-center px-4 py-2 bg-slate-50 rounded-lg">
+                  <svg className="w-4 h-4 text-slate-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm text-slate-600 font-medium">
+                    {new Date().toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+
+                {/* User Profile */}
+                <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+                  <div className="text-right hidden sm:block">
+                    <p className="text-sm font-semibold text-slate-800">
                       {user.name}
                     </p>
-                    <p className="text-xs text-gray-500 capitalize">
+                    <p className="text-xs text-slate-500 capitalize">
                       {user.role}
                     </p>
+                  </div>
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-md">
+                    <span className="text-sm font-bold text-white">
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1008,7 +1046,7 @@ export default function HotelOwnerDashboard() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           <>
-            <main className="flex-1 overflow-y-auto bg-gray-50">
+            <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-slate-100">
               <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <div className="px-4 py-6 sm:px-0">
                   {activeView === "hotels" ? (
@@ -1904,18 +1942,25 @@ export default function HotelOwnerDashboard() {
                   ) : (
                     <div>
                       {/* ── PAGE HEADER ─────────────────────────────────── */}
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
-                        <div>
-                          <h2 className="text-2xl font-bold text-gray-900">
-                            Analytics Dashboard
-                          </h2>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Real-time overview of your entire hotel portfolio
-                          </p>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h2 className="text-2xl font-bold text-slate-800">
+                              Analytics Dashboard
+                            </h2>
+                            <p className="text-sm text-slate-500 mt-0.5">
+                              Real-time overview of your entire hotel portfolio
+                            </p>
+                          </div>
                         </div>
                         <button
                           onClick={fetchAnalyticsData}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors self-start sm:self-auto"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 self-start sm:self-auto"
                         >
                           <svg
                             className="w-4 h-4"
@@ -1936,108 +1981,170 @@ export default function HotelOwnerDashboard() {
 
                       {analyticsData.loading ? (
                         <div className="flex flex-col items-center justify-center py-24">
-                          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-                          <p className="text-gray-500 text-sm">
+                          <div className="w-14 h-14 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                          <p className="text-slate-500 text-sm font-medium">
                             Loading analytics data…
                           </p>
                         </div>
                       ) : (
                         <>
                           {/* ── ROW 1 · KPI CARDS ───────────────────────── */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4 mb-6">
+                          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
                             {/* Total Guests */}
-                            <div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl p-4 text-white shadow">
-                              <p className="text-xs font-medium text-brand-100 uppercase tracking-wide">
-                                Total Guests
-                              </p>
-                              <p className="text-2xl font-bold mt-1">
-                                {allGuests.length}
-                              </p>
-                              <p className="text-xs text-blue-200 mt-1">
-                                Registered
+                            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Total Guests
+                                  </p>
+                                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">
+                                    {allGuests.length}
+                                  </p>
+                                </div>
+                                <div className="w-11 h-11 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <p className="text-xs text-cyan-600 mt-2 font-medium">
+                                Registered guests
                               </p>
                             </div>
                             {/* Total Revenue */}
-                            <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-xl p-4 text-white shadow">
-                              <p className="text-xs font-medium text-brand-100 uppercase tracking-wide">
-                                Total Revenue
-                              </p>
-                              <p className="text-2xl font-bold mt-1">
-                                $
-                                {analyticsData.financialSummary.totalRevenue.toLocaleString()}
-                              </p>
-                              <p className="text-xs text-indigo-200 mt-1">
-                                All time
+                            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Total Revenue
+                                  </p>
+                                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">
+                                    ${analyticsData.financialSummary.totalRevenue.toLocaleString()}
+                                  </p>
+                                </div>
+                                <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <p className="text-xs text-emerald-600 mt-2 font-medium">
+                                All time earnings
                               </p>
                             </div>
                             {/* Occupancy Rate */}
-                            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white shadow">
-                              <p className="text-xs font-medium text-emerald-100 uppercase tracking-wide">
-                                Occupancy
-                              </p>
-                              <p className="text-2xl font-bold mt-1">
-                                {analyticsData.occupancyRate}%
-                              </p>
-                              <p className="text-xs text-emerald-200 mt-1">
+                            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Occupancy
+                                  </p>
+                                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">
+                                    {analyticsData.occupancyRate}%
+                                  </p>
+                                </div>
+                                <div className="w-11 h-11 bg-gradient-to-br from-violet-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <p className="text-xs text-violet-600 mt-2 font-medium">
                                 All branches
                               </p>
                             </div>
                             {/* Total Bookings */}
-                            <div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl p-4 text-white shadow">
-                              <p className="text-xs font-medium text-brand-100 uppercase tracking-wide">
-                                Bookings
-                              </p>
-                              <p className="text-2xl font-bold mt-1">
-                                {bookings.length}
-                              </p>
-                              <p className="text-xs text-blue-200 mt-1">
-                                Total
+                            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Bookings
+                                  </p>
+                                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">
+                                    {bookings.length}
+                                  </p>
+                                </div>
+                                <div className="w-11 h-11 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <p className="text-xs text-blue-600 mt-2 font-medium">
+                                Total bookings
                               </p>
                             </div>
                             {/* Checked In */}
-                            <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-4 text-white shadow">
-                              <p className="text-xs font-medium text-teal-100 uppercase tracking-wide">
-                                Checked In
-                              </p>
-                              <p className="text-2xl font-bold mt-1">
-                                {
-                                  bookings.filter(
-                                    (b) => b.status === "CHECKED_IN",
-                                  ).length
-                                }
-                              </p>
-                              <p className="text-xs text-teal-200 mt-1">
+                            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Checked In
+                                  </p>
+                                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">
+                                    {
+                                      bookings.filter(
+                                        (b) => b.status === "CHECKED_IN",
+                                      ).length
+                                    }
+                                  </p>
+                                </div>
+                                <div className="w-11 h-11 bg-gradient-to-br from-teal-400 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/25">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <p className="text-xs text-teal-600 mt-2 font-medium">
                                 Active guests
                               </p>
                             </div>
                             {/* Available Rooms */}
-                            <div className="bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl p-4 text-white shadow">
-                              <p className="text-xs font-medium text-violet-100 uppercase tracking-wide">
-                                Available
-                              </p>
-                              <p className="text-2xl font-bold mt-1">
-                                {hotelsWithRooms.reduce(
-                                  (s, h) => s + h.availableRooms,
-                                  0,
-                                )}
-                              </p>
-                              <p className="text-xs text-violet-200 mt-1">
-                                Rooms
+                            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Available
+                                  </p>
+                                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">
+                                    {hotelsWithRooms.reduce(
+                                      (s, h) => s + h.availableRooms,
+                                      0,
+                                    )}
+                                  </p>
+                                </div>
+                                <div className="w-11 h-11 bg-gradient-to-br from-rose-400 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/25">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v7a3 3 0 003 3h3a3 3 0 003-3v-7m-6 0v7a3 3 0 003 3h3a3 3 0 003-3v-7" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <p className="text-xs text-rose-600 mt-2 font-medium">
+                                Rooms ready
                               </p>
                             </div>
                             {/* Cancelled */}
-                            <div className="bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl p-4 text-white shadow">
-                              <p className="text-xs font-medium text-rose-100 uppercase tracking-wide">
-                                Cancelled
-                              </p>
-                              <p className="text-2xl font-bold mt-1">
-                                {
-                                  analyticsData.financialSummary
-                                    .cancelledBookings
-                                }
-                              </p>
-                              <p className="text-xs text-rose-200 mt-1">
-                                Bookings
+                            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 group">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Cancelled
+                                  </p>
+                                  <p className="text-3xl font-bold text-slate-800 mt-2 group-hover:scale-110 transition-transform">
+                                    {
+                                      analyticsData.financialSummary
+                                        .cancelledBookings
+                                    }
+                                  </p>
+                                </div>
+                                <div className="w-11 h-11 bg-gradient-to-br from-orange-400 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/25">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <p className="text-xs text-orange-600 mt-2 font-medium">
+                                Cancelled bookings
                               </p>
                             </div>
                           </div>
@@ -2045,15 +2152,22 @@ export default function HotelOwnerDashboard() {
                           {/* ── ROW 2 · OCCUPANCY + FINANCIAL SUMMARY ───── */}
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             {/* Occupancy Rate – All Branches */}
-                            <div className="bg-white rounded-xl shadow p-6">
-                              <div className="flex items-center justify-between mb-5">
-                                <div>
-                                  <h3 className="text-base font-semibold text-gray-900">
-                                    Occupancy Rate
-                                  </h3>
-                                  <p className="text-xs text-gray-500 mt-0.5">
-                                    Live status across all branches
-                                  </p>
+                            <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 p-6">
+                              <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-violet-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <h3 className="text-lg font-bold text-slate-800">
+                                      Occupancy Rate
+                                    </h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                      Live status across all branches
+                                    </p>
+                                  </div>
                                 </div>
                                 {/* Overall gauge */}
                                 <div className="relative w-20 h-20 flex-shrink-0">
@@ -2066,8 +2180,8 @@ export default function HotelOwnerDashboard() {
                                       cy="18"
                                       r="15.9"
                                       fill="none"
-                                      stroke="#e5e7eb"
-                                      strokeWidth="3.5"
+                                      stroke="#f1f5f9"
+                                      strokeWidth="4"
                                     />
                                     <circle
                                       cx="18"
@@ -2081,13 +2195,13 @@ export default function HotelOwnerDashboard() {
                                             ? "#f59e0b"
                                             : "#ef4444"
                                       }
-                                      strokeWidth="3.5"
+                                      strokeWidth="4"
                                       strokeDasharray={`${analyticsData.occupancyRate} ${100 - analyticsData.occupancyRate}`}
                                       strokeLinecap="round"
                                     />
                                   </svg>
                                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-lg font-bold text-gray-900">
+                                    <span className="text-lg font-bold text-slate-800">
                                       {analyticsData.occupancyRate}%
                                     </span>
                                   </div>
@@ -2178,58 +2292,80 @@ export default function HotelOwnerDashboard() {
                               </div>
 
                               {/* Revenue cards */}
-                              <div className="grid grid-cols-2 gap-3 mb-5">
-                                <div className="bg-green-50 border border-green-100 rounded-lg p-3">
-                                  <p className="text-xs text-green-600 font-medium">
-                                    Total Revenue
-                                  </p>
-                                  <p className="text-xl font-bold text-green-800 mt-0.5">
-                                    $
-                                    {analyticsData.financialSummary.totalRevenue.toLocaleString()}
-                                  </p>
-                                </div>
-                                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                                  <p className="text-xs text-blue-600 font-medium">
-                                    Paid
-                                  </p>
-                                  <p className="text-xl font-bold text-blue-800 mt-0.5">
-                                    $
-                                    {analyticsData.financialSummary.paidAmount.toLocaleString()}
+                              <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 rounded-xl p-4">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                    </div>
+                                    <p className="text-xs text-emerald-600 font-semibold">
+                                      Total Revenue
+                                    </p>
+                                  </div>
+                                  <p className="text-2xl font-bold text-emerald-800">
+                                    ${analyticsData.financialSummary.totalRevenue.toLocaleString()}
                                   </p>
                                 </div>
-                                <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                                  <p className="text-xs text-amber-600 font-medium">
-                                    Pending
-                                  </p>
-                                  <p className="text-xl font-bold text-amber-800 mt-0.5">
-                                    $
-                                    {analyticsData.financialSummary.pendingAmount.toLocaleString()}
+                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                    </div>
+                                    <p className="text-xs text-blue-600 font-semibold">
+                                      Paid
+                                    </p>
+                                  </div>
+                                  <p className="text-2xl font-bold text-blue-800">
+                                    ${analyticsData.financialSummary.paidAmount.toLocaleString()}
                                   </p>
                                 </div>
-                                <div className="bg-purple-50 border border-purple-100 rounded-lg p-3">
-                                  <p className="text-xs text-purple-600 font-medium">
-                                    Total Bookings
+                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-xl p-4">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
+                                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                    </div>
+                                    <p className="text-xs text-amber-600 font-semibold">
+                                      Pending
+                                    </p>
+                                  </div>
+                                  <p className="text-2xl font-bold text-amber-800">
+                                    ${analyticsData.financialSummary.pendingAmount.toLocaleString()}
                                   </p>
-                                  <p className="text-xl font-bold text-purple-800 mt-0.5">
-                                    {
-                                      analyticsData.financialSummary
-                                        .totalBookings
-                                    }
+                                </div>
+                                <div className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 rounded-xl p-4">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 bg-violet-500 rounded-lg flex items-center justify-center">
+                                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                      </svg>
+                                    </div>
+                                    <p className="text-xs text-violet-600 font-semibold">
+                                      Total Bookings
+                                    </p>
+                                  </div>
+                                  <p className="text-2xl font-bold text-violet-800">
+                                    {analyticsData.financialSummary.totalBookings}
                                   </p>
                                 </div>
                               </div>
 
                               {/* Stacked revenue bar */}
                               <div>
-                                <p className="text-xs font-medium text-gray-600 mb-2">
+                                <p className="text-xs font-semibold text-slate-600 mb-3">
                                   Payment Status Breakdown
                                 </p>
                                 {analyticsData.financialSummary.totalRevenue >
                                 0 ? (
                                   <>
-                                    <div className="flex h-5 rounded-full overflow-hidden bg-gray-100">
+                                    <div className="flex h-4 rounded-xl overflow-hidden bg-slate-100 shadow-inner">
                                       <div
-                                        className="bg-green-500 flex items-center justify-center text-white text-xs font-medium transition-all"
+                                        className="bg-gradient-to-r from-emerald-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-500"
                                         style={{
                                           width: `${(analyticsData.financialSummary.paidAmount / analyticsData.financialSummary.totalRevenue) * 100}%`,
                                         }}
@@ -2245,7 +2381,7 @@ export default function HotelOwnerDashboard() {
                                           : ""}
                                       </div>
                                       <div
-                                        className="bg-amber-400 flex items-center justify-center text-white text-xs font-medium transition-all"
+                                        className="bg-gradient-to-r from-amber-400 to-orange-400 flex items-center justify-center text-white text-xs font-bold transition-all duration-500"
                                         style={{
                                           width: `${(analyticsData.financialSummary.pendingAmount / analyticsData.financialSummary.totalRevenue) * 100}%`,
                                         }}
@@ -2261,18 +2397,22 @@ export default function HotelOwnerDashboard() {
                                           : ""}
                                       </div>
                                     </div>
-                                    <div className="flex gap-3 mt-1 text-xs text-gray-500">
-                                      <span className="flex items-center gap-1.5">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+                                    <div className="flex gap-4 mt-3 text-xs font-medium">
+                                      <span className="flex items-center gap-2 text-emerald-600">
+                                        <span className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 shadow-sm"></span>
                                         Paid
                                       </span>
-                                      <span className="flex items-center gap-1.5">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                                      <span className="flex items-center gap-2 text-amber-600">
+                                        <span className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 shadow-sm"></span>
                                         Pending
                                       </span>
                                     </div>
                                   </>
-                                ) : null}
+                                ) : (
+                                  <div className="text-center py-4 text-slate-400 text-sm bg-slate-50 rounded-xl">
+                                    No revenue data available
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
