@@ -746,6 +746,8 @@ export default function ReceptionistDashboard() {
                               <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
                               <span className="text-sm font-medium text-green-800">Available</span>
                             </div>
+
+                            
                             <p className="text-2xl font-bold text-green-600 mt-1">
                               {rooms.filter(r => r.status === 'available').length}
                             </p>

@@ -99,8 +99,16 @@ export const createInvoice = async (req, res) => {
 // Get all invoices
 export const getInvoices = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status, branchId, search } = req.query;
-    const filter = tenantFilter(req);
+    const { page = 1, limit = 10, status, branchId, search, bypassOwnership } = req.query;
+    
+    // Use bypassOwnership parameter to completely bypass all filtering for hotel owners
+    let filter = {};
+    if (bypassOwnership === 'true' && (req.user.role === 'hotel_owner' || req.user.role === 'HOTEL_OWNER' || req.user.role === 'owner')) {
+      console.log("DEBUG: Bypassing all ownership filters for hotel owner");
+      filter = {}; // No filters at all - get ALL invoices
+    } else {
+      filter = tenantFilter(req);
+    }
     
     // Add filters
     if (status) filter.status = status;
@@ -112,6 +120,9 @@ export const getInvoices = async (req, res) => {
       ];
     }
     
+    console.log("DEBUG: Final filter:", filter);
+    console.log("DEBUG: Bypass ownership:", bypassOwnership);
+    
     const skip = (page - 1) * limit;
     
     const invoices = await Invoice.find(filter)
@@ -119,6 +130,7 @@ export const getInvoices = async (req, res) => {
       .populate('guestId', 'name email phone')
       .populate('branchId', 'name city')
       .populate('createdBy', 'name email')
+      .populate('hotelId', 'name city')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
